@@ -33,6 +33,13 @@ for (const [name, phase] of Object.entries(result.phases)) {
       `${cell(p(phase, "p50"), base && p(base, "p50"))} | ${cell(p(phase, "p95"), base && p(base, "p95"))} |`
   );
 }
+const unfocused = Object.entries(result.phases).filter(([, ph]) => (ph.focusedShare ?? 1) < 0.95);
+if (unfocused.length) {
+  console.log(
+    `\nNOT VALID: the window lost focus during ${unfocused.map(([n, ph]) => `${n} (${Math.round(ph.focusedShare * 100)}% focused)`).join(", ")}. ` +
+      "The Git extension does not run status for an unfocused window; rerun with the test window in front."
+  );
+}
 console.log("");
 console.log("Why full reloads happened (count per phase):");
 for (const [name, phase] of Object.entries(result.phases)) {

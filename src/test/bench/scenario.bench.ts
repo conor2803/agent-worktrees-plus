@@ -98,14 +98,24 @@ suite("Agent Worktrees Plus benchmark", () => {
   const fx: Fixture = JSON.parse(fs.readFileSync(process.env.BENCH_FIXTURE!, "utf8"));
   const [alpha, bravo, charlie, delta] = fx.repos;
   const agent = (name: string) => fx.agents.find((a) => a.name === name)!;
-  const phases: Record<string, PerfSnapshot & { ms: number }> = {};
+  const phases: Record<string, PerfSnapshot & { ms: number; focusedShare: number }> = {};
   let perf: PerfCounters;
 
   async function phase(name: string, drive: () => Promise<void>) {
     perf.reset();
     const started = Date.now();
+    // The Git extension does not run status for an unfocused window, so a phase
+    // that lost focus measured something else; the report flags it.
+    let samples = 0;
+    let focused = 0;
+    const sampler = setInterval(() => {
+      samples++;
+      if (vscode.window.state.focused) focused++;
+    }, 1_000);
     await drive();
-    phases[name] = { ...perf.snapshot(), ms: Date.now() - started };
+    clearInterval(sampler);
+    const focusedShare = samples ? Math.round((focused / samples) * 100) / 100 : 0;
+    phases[name] = { ...perf.snapshot(), ms: Date.now() - started, focusedShare };
   }
 
   suiteSetup(async () => {
