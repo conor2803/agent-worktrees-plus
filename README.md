@@ -1,4 +1,4 @@
-# Agent Worktrees
+# Agent Worktrees Plus
 
 A VS Code side panel for running and monitoring multiple Claude Code agents
 across the git worktrees of a repository. Spin up a Claude session in any
@@ -11,13 +11,24 @@ by hand means juggling terminals and `git worktree` commands with no single plac
 to see which agent needs you. This panel puts every worktree, its git state, and
 its running agents in one view.
 
+## About this fork
+
+Agent Worktrees Plus is a standalone fork of
+[Agent Worktrees](https://github.com/BradenTerry/agent-worktrees) by Braden
+Terry, taken at v4.6.12. Behaviour is unchanged from that release so far.
+Planned: working with several repositories in one window, each window choosing
+an Active Repo from its workspace folders. Commands and settings live under
+`agentWorktreesPlus.*`, so nothing is shared with the original; uninstall the
+original before installing this one.
+The domain language is in [CONTEXT.md](CONTEXT.md).
+
 ## Screenshots
 
 <sub>Click any thumbnail to view it full size.</sub>
 
 | Worktrees, git status & agents | Every agent in one list | PR checks, review & comments | Settings & integrations | Linked files | Skills used per agent |
 | :---: | :---: | :---: | :---: | :---: | :---: |
-| [<img src="https://raw.githubusercontent.com/BradenTerry/agent-worktrees/main/images/overview.png" alt="Worktrees, git status, PRs and agents in the panel" width="240">](https://raw.githubusercontent.com/BradenTerry/agent-worktrees/main/images/overview.png) | [<img src="https://raw.githubusercontent.com/BradenTerry/agent-worktrees/main/images/agents-view.png" alt="The agents view: every agent in the repository in one list, a pinned one held at the top, each row naming the branch it is working on" width="240">](https://raw.githubusercontent.com/BradenTerry/agent-worktrees/main/images/agents-view.png) | [<img src="https://raw.githubusercontent.com/BradenTerry/agent-worktrees/main/images/pr-status.png" alt="CI checks and review status on a worktree's PR" width="240">](https://raw.githubusercontent.com/BradenTerry/agent-worktrees/main/images/pr-status.png) | [<img src="https://raw.githubusercontent.com/BradenTerry/agent-worktrees/main/images/settings.png" alt="GitHub PR status and integration settings" width="240">](https://raw.githubusercontent.com/BradenTerry/agent-worktrees/main/images/settings.png) | [<img src="https://raw.githubusercontent.com/BradenTerry/agent-worktrees/main/images/linked-files.png" alt="The Linked Files settings tab listing gitignored paths symlinked into every worktree" width="240">](https://raw.githubusercontent.com/BradenTerry/agent-worktrees/main/images/linked-files.png) | [<img src="https://raw.githubusercontent.com/BradenTerry/agent-worktrees/main/images/skills.png" alt="The skills modal listing the Claude skills an agent has used" width="240">](https://raw.githubusercontent.com/BradenTerry/agent-worktrees/main/images/skills.png) |
+| [<img src="https://raw.githubusercontent.com/conor2803/agent-worktrees-plus/main/images/overview.png" alt="Worktrees, git status, PRs and agents in the panel" width="240">](https://raw.githubusercontent.com/conor2803/agent-worktrees-plus/main/images/overview.png) | [<img src="https://raw.githubusercontent.com/conor2803/agent-worktrees-plus/main/images/agents-view.png" alt="The agents view: every agent in the repository in one list, a pinned one held at the top, each row naming the branch it is working on" width="240">](https://raw.githubusercontent.com/conor2803/agent-worktrees-plus/main/images/agents-view.png) | [<img src="https://raw.githubusercontent.com/conor2803/agent-worktrees-plus/main/images/pr-status.png" alt="CI checks and review status on a worktree's PR" width="240">](https://raw.githubusercontent.com/conor2803/agent-worktrees-plus/main/images/pr-status.png) | [<img src="https://raw.githubusercontent.com/conor2803/agent-worktrees-plus/main/images/settings.png" alt="GitHub PR status and integration settings" width="240">](https://raw.githubusercontent.com/conor2803/agent-worktrees-plus/main/images/settings.png) | [<img src="https://raw.githubusercontent.com/conor2803/agent-worktrees-plus/main/images/linked-files.png" alt="The Linked Files settings tab listing gitignored paths symlinked into every worktree" width="240">](https://raw.githubusercontent.com/conor2803/agent-worktrees-plus/main/images/linked-files.png) | [<img src="https://raw.githubusercontent.com/conor2803/agent-worktrees-plus/main/images/skills.png" alt="The skills modal listing the Claude skills an agent has used" width="240">](https://raw.githubusercontent.com/conor2803/agent-worktrees-plus/main/images/skills.png) |
 
 ## Features
 
@@ -119,10 +130,10 @@ its running agents in one view.
   One per *entry* into waiting (never repeated by the 1s poll, raised again if
   the same session blocks a second time), and the first payload seeds the set
   silently so opening a window onto blocked agents announces nothing. Default
-  `unfocused` (`agentWorktrees.notifyWaiting`): the case no other signal covers,
+  `unfocused` (`agentWorktreesPlus.notifyWaiting`): the case no other signal covers,
   since neither the dot nor the badge reaches you behind another application.
   A second notification, with an **Open PR** button, when a PR the panel saw
-  open with **auto-merge** on is merged (`agentWorktrees.notifyPrMerged`, same
+  open with **auto-merge** on is merged (`agentWorktreesPlus.notifyPrMerged`, same
   values); it is decided by a transition in the PR poll, so a PR already merged
   at window open, or one merged by hand, never announces. Both take `off`,
   `unfocused`, `focused` or `always`, and both are switches under
@@ -133,7 +144,7 @@ its running agents in one view.
   from the same payload, so switching is a
   webview-local re-render with no round trip. Rows are grouped by status in the
   order set under **Settings → Preferences**
-  (`agentWorktrees.agentStatusOrder`, waiting first by default), normalized on
+  (`agentWorktreesPlus.agentStatusOrder`, waiting first by default), normalized on
   every read so a hand-edited value can never hide a status's agents. A pin per
   row outranks that grouping and keeps one agent at the top; the pins are
   webview state, swept as the sessions they name end. Each row also carries the

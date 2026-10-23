@@ -83,7 +83,7 @@ silently doing nothing.
 
 ## When it fires
 
-Config: `agentWorktrees.notifyWaiting`.
+Config: `agentWorktreesPlus.notifyWaiting`.
 
 | Value       | Behaviour                                                      |
 | ----------- | -------------------------------------------------------------- |
@@ -163,7 +163,7 @@ one merge they were not watching for: they turned auto-merge on so they could go
 and do something else. The card's PR pill flips to **merged** when the poll
 notices, but the pill terminates inside the panel like every other signal there.
 
-Config: `agentWorktrees.notifyPrMerged`, the same four values with the same
+Config: `agentWorktreesPlus.notifyPrMerged`, the same four values with the same
 default and the same normalizer. The button is **Open PR** (`env.openExternal` on
 the PR's URL).
 

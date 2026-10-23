@@ -186,7 +186,7 @@ split by which one they have (`src/statusPoll.ts`):
 | | Change signal | `git status` cadence |
 | --- | --- | --- |
 | Repository open in the Git extension | `state.onDidChange` for that repository | on the event, plus `WATCHED_STATUS_TTL_MS` (30s) as a backstop |
-| No open repository | none | `agentWorktrees.statusPollSeconds` (default 10s), and only while an agent is working there |
+| No open repository | none | `agentWorktreesPlus.statusPollSeconds` (default 10s), and only while an agent is working there |
 
 The first tier is free: something else is already running that watcher, and it
 tells us when to look. The second has no signal at all — nothing sees a file an
@@ -303,7 +303,7 @@ under a paragraph naming both keys, and it goes both ways), which is why there i
 no modal in front of it.
 
 The tab carries one control that is *not* git's: the recheck interval, which
-writes this extension's own `agentWorktrees.statusPollSeconds` and applies to
+writes this extension's own `agentWorktreesPlus.statusPollSeconds` and applies to
 every repository. It sits here because it answers the same question the switches
 do — "the panel is spending too much time in git" — and a fixed list of rates is
 offered rather than a free number, so the control cannot ask for a value the
@@ -366,7 +366,7 @@ changed and files may have changed in *that* agent's worktree, not the others, s
   id), or one hosting an **active** agent (or a running subagent);
 - and only if that worktree has not been stat'd within its tier's interval (see
   [Two tiers](#two-tiers-what-the-poll-is-actually-for)), so a card with a working
-  agent costs one status every `agentWorktrees.statusPollSeconds` rather than one
+  agent costs one status every `agentWorktreesPlus.statusPollSeconds` rather than one
   per poll tick — and none at all while its repository is open in the Git
   extension, which re-stats it on its own event instead.
 

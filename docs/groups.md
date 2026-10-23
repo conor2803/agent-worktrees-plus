@@ -13,7 +13,7 @@ are the next one, and this layer is what they will assign into.
 
 ```mermaid
 flowchart TB
-  subgraph store["globalState: agentWorktrees.groups"]
+  subgraph store["globalState: agentWorktreesPlus.groups"]
     S["repoRoot -> GroupState<br/>order / names / of"]
   end
   S -->|normalizeGroups| N["a state that always renders"]
@@ -64,7 +64,7 @@ worktree compares equal on Windows too.
 
 ## Where the state lives
 
-`globalState`, under `agentWorktrees.groups`, as a map of repo root to
+`globalState`, under `agentWorktreesPlus.groups`, as a map of repo root to
 `GroupState` - the same shape and for the same reasons as the linked-paths map
 beside it:
 

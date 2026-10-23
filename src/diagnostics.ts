@@ -27,7 +27,7 @@ export function diag(msg: string): void {
 
 /**
  * Whether verbose tracing of external calls (git + GitHub) is on. Off by
- * default; toggled from the `agentWorktrees.trace` setting. Kept as a cheap
+ * default; toggled from the `agentWorktreesPlus.trace` setting. Kept as a cheap
  * boolean so hot paths can skip building trace strings when it is off.
  */
 let tracing = false;
