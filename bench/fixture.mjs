@@ -80,7 +80,12 @@ export function startAgent(claudeDir, { name, cwd, status = "idle" }) {
   return agent;
 }
 
-export function buildFixture(root = fs.mkdtempSync(path.join(os.tmpdir(), "awtp-bench-"))) {
+// Real paths throughout: Claude records an Agent's folder resolved, and git
+// lists Worktrees resolved, so a symlinked tmp (macOS's /var) would make every
+// folder look like it belongs to no Worktree.
+export function buildFixture(
+  root = fs.mkdtempSync(path.join(fs.realpathSync.native(os.tmpdir()), "awtp-bench-"))
+) {
   const repos = ["alpha", "bravo", "charlie", "delta"].map((n) => makeRepo(root, n));
   const [alpha, bravo, charlie, delta] = repos;
   const claudeDir = path.join(root, "claude");
