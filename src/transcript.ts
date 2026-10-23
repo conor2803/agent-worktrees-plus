@@ -1,6 +1,7 @@
 import * as fs from "fs";
 import * as path from "path";
 import { StringDecoder } from "string_decoder";
+import { perf } from "./perf";
 import { SubagentVM } from "./worktreeData";
 import {
   liveSubagents,
@@ -147,6 +148,7 @@ export interface TranscriptTail {
  * stopping at the first, since several subagents can finish in one window.
  */
 export function readTail(file: string): TranscriptTail {
+  perf.count("transcript.tail");
   const out: TranscriptTail = { title: "", finished: [], skills: [] };
   let fd: number | undefined;
   try {
@@ -238,6 +240,7 @@ export interface TranscriptScan {
  * session, not repeatedly.
  */
 export async function scanTranscript(file: string): Promise<TranscriptScan> {
+  perf.count("transcript.scan");
   const out: TranscriptScan = { skills: [], title: "" };
   const seen = new Set<string>();
   let handle: fs.promises.FileHandle | undefined;

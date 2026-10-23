@@ -1,4 +1,5 @@
 import * as cp from "child_process";
+import { perf } from "./perf";
 
 /**
  * Reading the OS process tree, so a panel row can find the terminal it is
@@ -197,6 +198,7 @@ export function readParentMap(
   exec: typeof cp.execFile = cp.execFile
 ): Promise<ParentMap> {
   const { file, args, windows } = treeCommand();
+  perf.count("ps.tree");
   return new Promise<ParentMap>((resolve) => {
     try {
       exec(
@@ -229,6 +231,7 @@ export function readCommandLine(
   pid: number,
   exec: typeof cp.execFile = cp.execFile
 ): Promise<string> {
+  perf.count("ps.commandLine");
   const win = process.platform === "win32";
   const file = win ? "powershell.exe" : "ps";
   const args = win

@@ -113,6 +113,7 @@ import {
 import { PrService, PrTarget } from "./prs";
 import { Coalescer } from "./scheduler";
 import { diag } from "./diagnostics";
+import { perf } from "./perf";
 import {
   GENERAL_GROUP_ID,
   GroupState,
@@ -575,6 +576,7 @@ export class WorktreeWebviewProvider
       // path knows which cards to re-stat.
       const pid = Number.parseInt(path.basename(uri.fsPath, ".json"), 10);
       if (Number.isInteger(pid)) this.pendingPids.add(pid);
+      perf.count("trigger.registry");
       this.agentsDebounce.trigger();
       this.prNudge.trigger();
     };
@@ -636,7 +638,10 @@ export class WorktreeWebviewProvider
       // and start/stop the subagent poll with focus (see syncAgentPoll).
       vscode.window.onDidChangeWindowState((s) => {
         this.syncAgentPoll();
-        if (s.focused) this.scheduleRefresh();
+        if (s.focused) {
+          perf.count("trigger.focus");
+          this.scheduleRefresh();
+        }
       }),
       // The user editing a file by hand. This is the one source of change no
       // other signal sees: the agent poll only re-stats cards with a working
@@ -716,7 +721,10 @@ export class WorktreeWebviewProvider
           return p === root || p.startsWith(root + path.sep);
         });
       });
-    if (relevant) this.scheduleRefresh();
+    if (relevant) {
+      perf.count("trigger.files");
+      this.scheduleRefresh();
+    }
   }
 
   /**
@@ -746,7 +754,10 @@ export class WorktreeWebviewProvider
       this.agentPoll = undefined;
       return;
     }
-    this.agentPoll = setInterval(() => this.agentsDebounce.trigger(), AGENT_POLL_MS);
+    this.agentPoll = setInterval(() => {
+      perf.count("trigger.agentPoll");
+      this.agentsDebounce.trigger();
+    }, AGENT_POLL_MS);
   }
 
   private get extensionUri(): vscode.Uri {
@@ -788,6 +799,7 @@ export class WorktreeWebviewProvider
         visible: webviewView.visible,
       });
       if (webviewView.visible) {
+        perf.count("trigger.visible");
         this.lastPosted = ""; // a re-shown view needs a fresh push
         void this.refresh();
       }
@@ -825,6 +837,7 @@ export class WorktreeWebviewProvider
    */
   async refresh(force = false): Promise<void> {
     if (!this.view) return;
+    perf.count("refresh.requested");
     if (this.refreshing) {
       this.queuedRefresh = { force: force || !!this.queuedRefresh?.force };
       return;
@@ -864,6 +877,8 @@ export class WorktreeWebviewProvider
 
   private async runRefresh(force: boolean): Promise<void> {
     if (!this.view) return;
+    perf.count("gather.full");
+    const startedAt = Date.now();
     const seq = ++this.updateSeq;
     // Claimed before any await, so a gather that throws on its way through
     // cannot leave the field set and stop the retry from ever being judged.
@@ -941,6 +956,7 @@ export class WorktreeWebviewProvider
     // catches up via onDidChangeViewState when re-shown.
     if (this.branchesPanel?.visible) void this.postBranches(false);
     await this.postGather(data, seq);
+    perf.time("gather.ms", Date.now() - startedAt);
     // The panel is now painted from purely local state. A forced refresh (the
     // Refresh button) also owes the user two things that are not local - remote
     // tracking refs and GitHub PR/CI status - and both are started here, AFTER
@@ -1186,9 +1202,11 @@ export class WorktreeWebviewProvider
    * know (an agent just created one with `claude -w`).
    */
   private async refreshAgents(): Promise<void> {
+    perf.count("refresh.agents");
     const data = this.lastData;
     if (!this.view || !data) {
       this.pendingPids.clear();
+      perf.count("fallback.agents.noPayload");
       return this.refresh();
     }
     const seq = ++this.updateSeq;
@@ -1198,6 +1216,7 @@ export class WorktreeWebviewProvider
     // A pid with no file left is a session that just ended, which changes what
     // a card lists rather than what one of its rows says. Nothing to patch.
     if ([...pids].some((pid) => !registry.some((s) => s.pid === pid))) {
+      perf.count("fallback.agents.sessionEnded");
       return this.refresh();
     }
     const changed = new Set(
@@ -1224,7 +1243,10 @@ export class WorktreeWebviewProvider
     // A worktree the cache has never heard of needs a full gather to get a card
     // at all (an agent just created one with `claude -w`).
     for (const key of sessions.agents.keys()) {
-      if (!known.has(key)) return this.refresh();
+      if (!known.has(key)) {
+        perf.count("fallback.agents.unknownCard");
+        return this.refresh();
+      }
     }
     // Same for a worktree an agent just created for itself (`claude -w`) or to
     // isolate a subagent. Neither is covered by the last full gather, and neither
@@ -1243,9 +1265,13 @@ export class WorktreeWebviewProvider
     );
     if (retry.length) {
       this.pendingRegather = new Set(retry.map(pathKey));
+      perf.count("fallback.agents.unplaced");
       return this.refresh();
     }
-    if (fewer) return this.refresh();
+    if (fewer) {
+      perf.count("fallback.agents.fewerSubagents");
+      return this.refresh();
+    }
     const now = Date.now();
     // Which cards are worth a `git status` on this pass. Two reasons to re-stat,
     // and the second one is not optional:
@@ -1301,7 +1327,10 @@ export class WorktreeWebviewProvider
       })
     );
     const touched = data.worktrees.filter((wt) => due.has(pathKey(wt.path)));
-    if (await this.statWorktrees(touched, now)) return this.refresh();
+    if (await this.statWorktrees(touched, now)) {
+      perf.count("fallback.agents.branchSwitch");
+      return this.refresh();
+    }
     this.applyAgents(data, sessions);
     this.postData(data, seq);
   }
@@ -1352,6 +1381,7 @@ export class WorktreeWebviewProvider
    * which only a re-list can fix.
    */
   private onRepoStateChange(root: string): void {
+    perf.count("trigger.repoState");
     this.repoDirty.add(root);
     this.reposDebounce.trigger();
   }
@@ -1366,16 +1396,26 @@ export class WorktreeWebviewProvider
     // replaced, none of it is owed to the Activity Bar badge, which counts
     // waiting agents from the registry watcher and never reads a working tree.
     if (!this.view?.visible || !dirty.size) return;
+    perf.count("refresh.repos");
     const data = this.lastData;
-    if (!data) return this.refresh();
+    if (!data) {
+      perf.count("fallback.repos.noPayload");
+      return this.refresh();
+    }
     const touched = data.worktrees.filter((wt) => dirty.has(pathKey(wt.path)));
     // A root that names no card is a repository this panel does not show, or one
     // whose card has yet to be listed. Only the second is worth a gather, and the
     // two are indistinguishable from here, so gather: the first costs one sweep
     // for a repository whose state rarely moves.
-    if (touched.length !== dirty.size) return this.refresh();
+    if (touched.length !== dirty.size) {
+      perf.count("fallback.repos.unknownRoot");
+      return this.refresh();
+    }
     const seq = ++this.updateSeq;
-    if (await this.statWorktrees(touched, Date.now())) return this.refresh();
+    if (await this.statWorktrees(touched, Date.now())) {
+      perf.count("fallback.repos.branchSwitch");
+      return this.refresh();
+    }
     this.postData(data, seq);
   }
 

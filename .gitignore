@@ -7,3 +7,6 @@ test-results/
 
 # VS Code extension test runner download cache
 .vscode-test/
+
+# Linked worktrees for parallel work on this repo
+.worktrees/

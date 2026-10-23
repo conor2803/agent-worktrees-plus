@@ -955,3 +955,11 @@ test("fetchRemotes reports no change when there is no remote at all", async () =
   git(r, ["init", "-b", "main"]);
   assert.strictEqual(await fetchRemotes(r), false);
 });
+
+test("subcommand: names the git subcommand past leading -c and -C options", () => {
+  const { subcommand } = require("../out/git.js");
+  assert.strictEqual(subcommand(["status", "--porcelain=v2"]), "status");
+  assert.strictEqual(subcommand(["-c", "core.quotepath=off", "worktree", "list"]), "worktree");
+  assert.strictEqual(subcommand(["-C", "/repo", "rev-parse"]), "rev-parse");
+  assert.strictEqual(subcommand(["--version"]), "unknown");
+});
