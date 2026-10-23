@@ -1,0 +1,98 @@
+{
+  "recordedAt": "2026-10-23T18:33:14.161Z",
+  "vscode": "1.143.1",
+  "platform": "darwin-arm64",
+  "windowFocused": true,
+  "phaseMs": 60000,
+  "phases": {
+    "idle": {
+      "counts": {
+        "gather.full": 1,
+        "git.status": 4,
+        "git.worktree": 1,
+        "refresh.requested": 1,
+        "trigger.focus": 1
+      },
+      "timings": {
+        "gather.ms": {
+          "count": 1,
+          "p50": 273,
+          "p95": 273,
+          "max": 273
+        }
+      },
+      "ms": 60002
+    },
+    "otherReposBusy": {
+      "counts": {
+        "fallback.agents.unplaced": 3,
+        "fallback.repos.unknownRoot": 24,
+        "gather.full": 27,
+        "git.status": 108,
+        "git.worktree": 27,
+        "refresh.agents": 20,
+        "refresh.repos": 24,
+        "refresh.requested": 27,
+        "trigger.registry": 20,
+        "trigger.repoState": 36
+      },
+      "timings": {
+        "gather.ms": {
+          "count": 27,
+          "p50": 137,
+          "p95": 178,
+          "max": 183
+        }
+      },
+      "ms": 60072
+    },
+    "firstRepoBusy": {
+      "counts": {
+        "fallback.repos.unknownRoot": 13,
+        "gather.full": 13,
+        "git.diff": 26,
+        "git.status": 52,
+        "git.worktree": 13,
+        "refresh.agents": 10,
+        "refresh.repos": 13,
+        "refresh.requested": 13,
+        "trigger.registry": 10,
+        "trigger.repoState": 25
+      },
+      "timings": {
+        "gather.ms": {
+          "count": 13,
+          "p50": 192,
+          "p95": 262,
+          "max": 262
+        }
+      },
+      "ms": 60067
+    },
+    "agentLifecycle": {
+      "counts": {
+        "fallback.agents.sessionEnded": 2,
+        "fallback.agents.unplaced": 3,
+        "fallback.repos.unknownRoot": 2,
+        "gather.full": 7,
+        "git.diff": 14,
+        "git.status": 31,
+        "git.worktree": 7,
+        "refresh.agents": 5,
+        "refresh.repos": 3,
+        "refresh.requested": 7,
+        "trigger.registry": 5,
+        "trigger.repoState": 4
+      },
+      "timings": {
+        "gather.ms": {
+          "count": 7,
+          "p50": 234,
+          "p95": 343,
+          "max": 343
+        }
+      },
+      "ms": 60236
+    }
+  }
+}
