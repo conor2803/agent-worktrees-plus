@@ -1,5 +1,5 @@
 {
-  "recordedAt": "2026-10-23T18:37:46.321Z",
+  "recordedAt": "2026-10-23T20:27:38.745Z",
   "vscode": "1.143.1",
   "platform": "darwin-arm64",
   "windowFocused": true,
@@ -8,91 +8,100 @@
     "idle": {
       "counts": {
         "gather.full": 1,
-        "git.status": 4,
+        "git.status": 6,
         "git.worktree": 1,
+        "refresh.agents": 59,
         "refresh.requested": 1,
+        "trigger.agentPoll": 60,
         "trigger.focus": 1
       },
       "timings": {
         "gather.ms": {
           "count": 1,
-          "p50": 192,
-          "p95": 192,
-          "max": 192
+          "p50": 205,
+          "p95": 205,
+          "max": 205
         }
       },
-      "ms": 60002
+      "ms": 60001,
+      "focusedShare": 1
     },
     "otherReposBusy": {
       "counts": {
-        "fallback.agents.unplaced": 3,
-        "fallback.repos.unknownRoot": 31,
-        "gather.full": 34,
-        "git.status": 136,
-        "git.worktree": 34,
-        "refresh.agents": 20,
-        "refresh.repos": 31,
-        "refresh.requested": 34,
+        "fallback.repos.unknownRoot": 29,
+        "gather.full": 29,
+        "git.status": 116,
+        "git.worktree": 29,
+        "refresh.agents": 59,
+        "refresh.repos": 29,
+        "refresh.requested": 29,
+        "trigger.agentPoll": 60,
         "trigger.registry": 20,
         "trigger.repoState": 36
       },
       "timings": {
         "gather.ms": {
-          "count": 34,
+          "count": 29,
           "p50": 134,
-          "p95": 167,
-          "max": 196
+          "p95": 141,
+          "max": 155
         }
       },
-      "ms": 60082
+      "ms": 60071,
+      "focusedShare": 1
     },
     "firstRepoBusy": {
       "counts": {
-        "fallback.repos.unknownRoot": 14,
-        "gather.full": 14,
-        "git.diff": 27,
-        "git.status": 56,
-        "git.worktree": 14,
-        "refresh.agents": 10,
-        "refresh.repos": 14,
-        "refresh.requested": 14,
+        "fallback.repos.unknownRoot": 2,
+        "gather.full": 2,
+        "git.diff": 26,
+        "git.status": 30,
+        "git.worktree": 2,
+        "refresh.agents": 60,
+        "refresh.repos": 18,
+        "refresh.requested": 2,
+        "trigger.agentPoll": 60,
         "trigger.registry": 10,
         "trigger.repoState": 26
       },
       "timings": {
         "gather.ms": {
-          "count": 14,
-          "p50": 139,
-          "p95": 184,
-          "max": 184
+          "count": 2,
+          "p50": 178,
+          "p95": 195,
+          "max": 195
         }
       },
-      "ms": 60068
+      "ms": 60086,
+      "focusedShare": 1
     },
     "agentLifecycle": {
       "counts": {
         "fallback.agents.sessionEnded": 2,
-        "fallback.agents.unplaced": 3,
-        "fallback.repos.unknownRoot": 2,
-        "gather.full": 7,
-        "git.diff": 14,
-        "git.status": 31,
-        "git.worktree": 7,
-        "refresh.agents": 5,
+        "fallback.agents.unplaced": 7,
+        "gather.full": 9,
+        "git.diff": 20,
+        "git.status": 40,
+        "git.worktree": 9,
+        "ps.commandLine": 1,
+        "ps.tree": 1,
+        "refresh.agents": 61,
         "refresh.repos": 3,
-        "refresh.requested": 7,
+        "refresh.requested": 9,
+        "trigger.agentPoll": 60,
         "trigger.registry": 5,
-        "trigger.repoState": 5
+        "trigger.repoState": 4
       },
       "timings": {
         "gather.ms": {
-          "count": 7,
-          "p50": 201,
-          "p95": 379,
-          "max": 379
+          "count": 9,
+          "p50": 204,
+          "p95": 213,
+          "max": 213
         }
       },
-      "ms": 60266
+      "ms": 60242,
+      "focusedShare": 1
     }
   }
 }

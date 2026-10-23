@@ -73,48 +73,54 @@ Agreed before any change was made:
 
 ### Baseline: 4.6.12 behaviour, counters only
 
-Two runs, to show the noise between runs on one machine.
+Two runs, both with the window focused throughout, to show the noise between
+runs on one machine.
 
 Run 1 (`bench/results/baseline.json`):
 
-Recorded 2026-10-23T18:33:14.161Z on darwin-arm64, VS Code 1.143.1, window focused: true
+Recorded 2026-10-23T20:23:11.530Z on darwin-arm64, VS Code 1.143.1, window focused: true
 
 | Phase | Full reloads/min | git commands/min | Reload ms p50 | Reload ms p95 |
 | --- | --- | --- | --- | --- |
-| idle | 1 | 5 | 273 | 273 |
-| otherReposBusy | 27 | 134.8 | 137 | 178 |
-| firstRepoBusy | 13 | 90.9 | 192 | 262 |
-| agentLifecycle | 7 | 51.8 | 234 | 343 |
+| idle | 1 | 7 | 203 | 203 |
+| otherReposBusy | 29 | 144.8 | 134 | 152 |
+| firstRepoBusy | 2 | 58 | 193 | 199 |
+| agentLifecycle | 9 | 68.7 | 203 | 756 |
 
 Why full reloads happened (count per phase):
-- idle: trigger.focus=1
-- otherReposBusy: fallback.agents.unplaced=3 fallback.repos.unknownRoot=24 trigger.registry=20 trigger.repoState=36
-- firstRepoBusy: fallback.repos.unknownRoot=13 trigger.registry=10 trigger.repoState=25
-- agentLifecycle: fallback.agents.sessionEnded=2 fallback.agents.unplaced=3 fallback.repos.unknownRoot=2 trigger.registry=5 trigger.repoState=4
+- idle: trigger.agentPoll=60 trigger.focus=1
+- otherReposBusy: fallback.repos.unknownRoot=29 trigger.agentPoll=60 trigger.registry=20 trigger.repoState=36
+- firstRepoBusy: fallback.repos.unknownRoot=2 trigger.agentPoll=60 trigger.registry=10 trigger.repoState=26
+- agentLifecycle: fallback.agents.sessionEnded=2 fallback.agents.unplaced=7 trigger.agentPoll=60 trigger.registry=5 trigger.repoState=4
 
 Run 2 (`bench/results/baseline-2.json`):
 
-Recorded 2026-10-23T18:37:46.321Z on darwin-arm64, VS Code 1.143.1, window focused: true
+Recorded 2026-10-23T20:27:38.745Z on darwin-arm64, VS Code 1.143.1, window focused: true
 
 | Phase | Full reloads/min | git commands/min | Reload ms p50 | Reload ms p95 |
 | --- | --- | --- | --- | --- |
-| idle | 1 | 5 | 192 | 192 |
-| otherReposBusy | 34 | 169.8 | 134 | 167 |
-| firstRepoBusy | 14 | 96.9 | 139 | 184 |
-| agentLifecycle | 7 | 51.8 | 201 | 379 |
+| idle | 1 | 7 | 205 | 205 |
+| otherReposBusy | 29 | 144.8 | 134 | 141 |
+| firstRepoBusy | 2 | 57.9 | 178 | 195 |
+| agentLifecycle | 9 | 68.7 | 204 | 213 |
 
 Why full reloads happened (count per phase):
-- idle: trigger.focus=1
-- otherReposBusy: fallback.agents.unplaced=3 fallback.repos.unknownRoot=31 trigger.registry=20 trigger.repoState=36
-- firstRepoBusy: fallback.repos.unknownRoot=14 trigger.registry=10 trigger.repoState=26
-- agentLifecycle: fallback.agents.sessionEnded=2 fallback.agents.unplaced=3 fallback.repos.unknownRoot=2 trigger.registry=5 trigger.repoState=5
+- idle: trigger.agentPoll=60 trigger.focus=1
+- otherReposBusy: fallback.repos.unknownRoot=29 trigger.agentPoll=60 trigger.registry=20 trigger.repoState=36
+- firstRepoBusy: fallback.repos.unknownRoot=2 trigger.agentPoll=60 trigger.registry=10 trigger.repoState=26
+- agentLifecycle: fallback.agents.sessionEnded=2 fallback.agents.unplaced=7 trigger.agentPoll=60 trigger.registry=5 trigger.repoState=4
 
-**What it shows.** With only the other Repos busy, the panel ran 27 to 34 full
-reloads a minute, two to three times what it ran when its own Repo was busy.
-Almost all of them are `fallback.repos.unknownRoot`: the Git extension finished a
-status run in another Repo, the panel had no card for it, and gathered every
-Worktree of its own Repo to find out. Agents in other Repos add a few more
+**What it shows.** With only the other Repos busy, the panel ran 29 full reloads
+a minute, against 2 when its own Repo was busy. Every one of them is
+`fallback.repos.unknownRoot`: the Git extension finished a status run in another
+Repo, the panel had no card for it, and it gathered every Worktree of its own
+Repo to find out. Agents starting and ending add more
 (`fallback.agents.unplaced`, `fallback.agents.sessionEnded`).
+
+**A run is only valid with the window focused.** The Git extension does not run
+status for an unfocused window, so an unfocused run never sees the events that
+cost the most. The report flags any phase under 95% focused; keep the test
+window in front while it runs.
 
 ## Your own window
 
