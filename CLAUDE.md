@@ -1,4 +1,4 @@
-# Agent Worktrees - project notes
+# Agent Worktrees Plus - project notes
 
 VS Code extension that shows git worktrees, their git/PR status, and the Claude
 agents running in each. The panel UI is a webview:
@@ -9,6 +9,20 @@ agents running in each. The panel UI is a webview:
   so the panel matches the user's editor theme.
 - `src/` - the extension host (TypeScript): git, GitHub PR polling, the webview
   provider. `npm run compile` typechecks/builds.
+
+## Domain language
+
+[`CONTEXT.md`](CONTEXT.md) is the glossary: Repo, Worktree, Active Repo, Agent and
+the rest. Code you add or change uses those words for names, types and docs, and
+models them as types rather than bare paths and strings. A new or contested term
+is settled in `CONTEXT.md` first. Code untouched since the fork keeps the
+original's vocabulary ("card", "unplaced", "session") until a change reaches it.
+
+## Upstream
+
+This is a standalone fork of `BradenTerry/agent-worktrees` at v4.6.12. The
+`upstream` remote is fetch-only. Taking an upstream fix is a deliberate
+cherry-pick through a PR here, never a merge of upstream's main.
 
 ## Documentation
 
@@ -22,8 +36,8 @@ updated:
   refresh coalescing, branches view, terminal titles, linked files). A change to
   one of those subsystems belongs in its doc, with at most a line in the README
   feature list. Don't grow the README back.
-- `MARKETPLACE.md` - usage-focused. The VS Code Marketplace listing the user
-  reads before installing. Describe features in terms of what the user gets,
+- `MARKETPLACE.md` - usage-focused. Packaged as the `.vsix`'s readme, so it is
+  the page VS Code shows for the installed extension. Describe features in terms of what the user gets,
   with no build/internals detail.
 
 When a feature is added, removed, or changed, check both: README for the
@@ -55,8 +69,8 @@ release's tag in the working tree just before `vsce package`, and never commits
 that. Without it a published listing would keep resolving against main forever,
 so landing a UI change without cutting a release would start advertising a panel
 nobody can install. Keep the URL shape as
-`raw.githubusercontent.com/<owner>/agent-worktrees/main/images/<name>.png` - the
-release step greps for that exact `/agent-worktrees/main/images/` substring and
+`raw.githubusercontent.com/<owner>/agent-worktrees-plus/main/images/<name>.png` - the
+release step greps for that exact `/agent-worktrees-plus/main/images/` substring and
 **fails the release** if it finds none.
 
 ## Validating accessibility / contrast
@@ -150,15 +164,10 @@ that follows a run of them rolls up **everything since the last regular
 release**, pre-release items included, so the regular channel's reader gets one
 complete section.
 
-The release **channel is the tag's suffix**, not the version: `vX.Y.Z` publishes
-to the regular channel and `vX.Y.Z-pre` publishes the same plain `X.Y.Z` to the
-pre-release one. The version itself is any `X.Y.Z` higher than the last release
-(the patch runs on into `v4.5.1001` if that suits), with one shape rule: **the
-patch always has at least two digits**, so a new minor starts at `X.Y.10` and
-`release.yml` rejects a patch under 10. Nothing else is reserved, and no minor
-is skipped. Both channels draw on one number line, so **a version is spent
-by whichever channel publishes it first**: preview `4.5.0` as `v4.5.0-pre` and the
-stable release of that work is `4.5.1`. See `.claude/skills/release/SKILL.md`.
+A release is a tag: `vX.Y.Z` makes a regular GitHub release and `vX.Y.Z-pre` a
+GitHub pre-release of the same plain `X.Y.Z`, each with the `.vsix` attached.
+There is no Marketplace publish. A version is spent by whichever tag uses it
+first.
 
 Releases are owner-only. `release.yml` has a `guard` job that fails unless
 `github.actor` is the repository owner, and its `publish` job targets the

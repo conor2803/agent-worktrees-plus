@@ -23,7 +23,7 @@ export interface MergedPr {
 }
 
 /** Config key for the mode. Same values as the waiting-agent setting. */
-export const NOTIFY_PR_MERGED_SETTING = "agentWorktrees.notifyPrMerged";
+export const NOTIFY_PR_MERGED_SETTING = "agentWorktreesPlus.notifyPrMerged";
 
 /** Shape of the payload this module reads. Structural, so the real
  *  `WorktreeVM`/`PrInfo` satisfy it without this module importing them. */

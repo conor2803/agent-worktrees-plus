@@ -2,7 +2,7 @@
  * The order the agents view groups its rows in, isolated from the VS Code API so
  * it can be unit-tested and read by both ends without either importing the other.
  *
- * The value is a user setting (`agentWorktrees.agentStatusOrder`), which means it
+ * The value is a user setting (`agentWorktreesPlus.agentStatusOrder`), which means it
  * arrives from a JSON file anybody can edit: a partial list, a duplicate, a
  * status that does not exist, or something that is not a list at all. None of
  * those may be able to hide an agent, so this normalizes rather than validates -

@@ -3597,7 +3597,7 @@
       '<p class="gh-help dim">Within a group the rows keep the order the ' +
       "worktree cards are in, so an agent moves only when its own status " +
       "changes. An agent you pin in that view sits above the groups entirely. " +
-      "Stored as <code>agentWorktrees.agentStatusOrder</code> and " +
+      "Stored as <code>agentWorktreesPlus.agentStatusOrder</code> and " +
       "applies to every repository; the worktree cards are unaffected, since " +
       "there each agent is already on the card for the code it is working on.</p>" +
       "</section>"
@@ -3726,8 +3726,8 @@
             : "")
       ) +
       "</ul>" +
-      '<p class="gh-help dim">Stored as <code>agentWorktrees.notifyWaiting</code> ' +
-      "and <code>agentWorktrees.notifyPrMerged</code>, and apply to every " +
+      '<p class="gh-help dim">Stored as <code>agentWorktreesPlus.notifyWaiting</code> ' +
+      "and <code>agentWorktreesPlus.notifyPrMerged</code>, and apply to every " +
       "repository.</p>" +
       "</section>"
     );
@@ -4093,7 +4093,7 @@
       "nothing global, nothing committed, and turning one off puts it back the way " +
       "it was. The same as <code>git config</code> in this repository, which is " +
       "still there if you prefer it. The interval is the panel's own setting " +
-      "(<code>agentWorktrees.statusPollSeconds</code>) and applies to every " +
+      "(<code>agentWorktreesPlus.statusPollSeconds</code>) and applies to every " +
       "repository.</p>" +
       "</section>"
     );

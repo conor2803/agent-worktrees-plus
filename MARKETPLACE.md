@@ -1,4 +1,4 @@
-# Agent Worktrees
+# Agent Worktrees Plus
 
 **Run and monitor several Claude Code agents across your git worktrees, from one side panel.**
 
@@ -6,7 +6,7 @@ Each worktree is an isolated checkout, so parallel agents never step on each
 other's files. This panel puts every worktree, its git state, its pull request
 and its running agents in one view.
 
-<img src="https://raw.githubusercontent.com/BradenTerry/agent-worktrees/main/images/overview.png" alt="The Agent Worktrees panel: four worktrees, each with a status stripe, a status line, its pull request and its running Claude agents" width="380">
+<img src="https://raw.githubusercontent.com/conor2803/agent-worktrees-plus/main/images/overview.png" alt="The Agent Worktrees panel: four worktrees, each with a status stripe, a status line, its pull request and its running Claude agents" width="380">
 
 - Every worktree at once: a stripe that says whether it needs you, and changed
   files, `+`/`-` lines and ahead/behind in the same place on every card.
@@ -80,7 +80,7 @@ takes its pin with it.
 
 | Every agent in one list | Choosing the order |
 | :--- | :--- |
-| <img src="https://raw.githubusercontent.com/BradenTerry/agent-worktrees/main/images/agents-view.png" alt="The agents view: every agent in the repository in one list, a pinned one held at the top, waiting next, each row naming its branch" width="380"> | <img src="https://raw.githubusercontent.com/BradenTerry/agent-worktrees/main/images/preferences.png" alt="Settings, Preferences tab: the agent statuses in the order the agents view groups them, with up and down controls" width="380"> |
+| <img src="https://raw.githubusercontent.com/conor2803/agent-worktrees-plus/main/images/agents-view.png" alt="The agents view: every agent in the repository in one list, a pinned one held at the top, waiting next, each row naming its branch" width="380"> | <img src="https://raw.githubusercontent.com/conor2803/agent-worktrees-plus/main/images/preferences.png" alt="Settings, Preferences tab: the agent statuses in the order the agents view groups them, with up and down controls" width="380"> |
 
 ### Status
 
@@ -120,10 +120,10 @@ Each one has its own switch under **Settings → Notifications**, with a choice
 of showing it only while VS Code is in the background (the default), only while
 you are in VS Code (for when the panel is hidden behind another view), or
 always.
-The same values live in `agentWorktrees.notifyWaiting` and
-`agentWorktrees.notifyPrMerged`.
+The same values live in `agentWorktreesPlus.notifyWaiting` and
+`agentWorktreesPlus.notifyPrMerged`.
 
-<img src="https://raw.githubusercontent.com/BradenTerry/agent-worktrees/main/images/skills.png" alt="The skills modal listing the Claude skills one agent has invoked" width="380">
+<img src="https://raw.githubusercontent.com/conor2803/agent-worktrees-plus/main/images/skills.png" alt="The skills modal listing the Claude skills one agent has invoked" width="380">
 
 ## Pull requests
 
@@ -147,13 +147,13 @@ and the card grows a PR rollup:
 
 | On the worktree card | Connecting a token |
 | :--- | :--- |
-| <img src="https://raw.githubusercontent.com/BradenTerry/agent-worktrees/main/images/pr-status.png" alt="A worktree card showing its PR number, title, state badge, a Ready to merge flag, and its reviews and checks in words" width="380"> | <img src="https://raw.githubusercontent.com/BradenTerry/agent-worktrees/main/images/settings.png" alt="Settings, GitHub tab: the PR status toggle and the connected token" width="380"> |
+| <img src="https://raw.githubusercontent.com/conor2803/agent-worktrees-plus/main/images/pr-status.png" alt="A worktree card showing its PR number, title, state badge, a Ready to merge flag, and its reviews and checks in words" width="380"> | <img src="https://raw.githubusercontent.com/conor2803/agent-worktrees-plus/main/images/settings.png" alt="Settings, GitHub tab: the PR status toggle and the connected token" width="380"> |
 
 ## Branches view
 
 A full editor tab listing every branch in the repo, local and remote-only.
 
-<img src="https://raw.githubusercontent.com/BradenTerry/agent-worktrees/main/images/branches.png" alt="The Branches editor tab: every branch with last-updated time and author, its PR with checks and review glyphs, and create-worktree actions in a fixed column" width="860">
+<img src="https://raw.githubusercontent.com/conor2803/agent-worktrees-plus/main/images/branches.png" alt="The Branches editor tab: every branch with last-updated time and author, its PR with checks and review glyphs, and create-worktree actions in a fixed column" width="860">
 
 - **Start agent** on branches with a worktree, **Create worktree & start agent**
   on the rest. A remote-only branch is checked out as a new local tracking branch.
@@ -176,7 +176,7 @@ New worktrees land in `.claude/worktrees/`, the same place `claude -w` puts them
 A new worktree only gets the files git tracks, so the gitignored local config your
 build or tests need is missing and they fail.
 
-<img src="https://raw.githubusercontent.com/BradenTerry/agent-worktrees/main/images/linked-files.png" alt="Settings, Linked Files tab: a list of gitignored paths symlinked into every worktree, with Add from .gitignore and Link existing worktrees buttons" width="380">
+<img src="https://raw.githubusercontent.com/conor2803/agent-worktrees-plus/main/images/linked-files.png" alt="Settings, Linked Files tab: a list of gitignored paths symlinked into every worktree, with Add from .gitignore and Link existing worktrees buttons" width="380">
 
 - List the paths once per repository; every worktree gets them symlinked in,
   including worktrees the panel did not create.
@@ -217,7 +217,7 @@ configurations.
 Half the worktrees in a busy repo are finished: pushed, waiting on a review, and
 still taking up the list. File them into a section and fold it.
 
-<img src="https://raw.githubusercontent.com/BradenTerry/agent-worktrees/main/images/groups.png" alt="The panel with its cards filed into three named sections, Working, In review and On ice, one of them folded and showing a waiting-agent count" width="380">
+<img src="https://raw.githubusercontent.com/conor2803/agent-worktrees-plus/main/images/groups.png" alt="The panel with its cards filed into three named sections, Working, In review and On ice, one of them folded and showing a waiting-agent count" width="380">
 
 - **Your main worktree stays on top**, outside the sections. It is the one every
   other worktree hangs off, so it is not something you file away.
@@ -245,7 +245,7 @@ still taking up the list. File them into a section and fold it.
 
 Every card is two lines at rest, and one click shuts them all.
 
-<img src="https://raw.githubusercontent.com/BradenTerry/agent-worktrees/main/images/collapsed.png" alt="Four worktrees with every card collapsed: a status stripe, the branch and its PR signal on one line, agent status and the git cell on the next" width="380">
+<img src="https://raw.githubusercontent.com/conor2803/agent-worktrees-plus/main/images/collapsed.png" alt="Four worktrees with every card collapsed: a status stripe, the branch and its PR signal on one line, agent status and the git cell on the next" width="380">
 
 - **One stripe per worktree.** Yellow down the left edge means it needs you: an
   agent is waiting, or the PR has changes requested, a failed check, or is out of

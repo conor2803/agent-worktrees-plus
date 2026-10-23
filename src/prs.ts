@@ -29,7 +29,7 @@ export interface PrTarget {
   repo: RemoteInfo;
 }
 
-const ENABLED_KEY = "agentWorktrees.prEnabled";
+const ENABLED_KEY = "agentWorktreesPlus.prEnabled";
 /** Poll cadence while CI is settled vs. while a check is still running. */
 const IDLE_MS = 90_000;
 const ACTIVE_MS = 15_000;

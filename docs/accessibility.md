@@ -116,7 +116,7 @@ path still in the tooltip. Making the ellipsis actually engage needed
 item's default `min-width: auto` is its min-content width.
 
 Long setting ids in Settings wrap rather than clip (`overflow-wrap: anywhere`).
-`agentWorktrees.statusPollSeconds` is one unbroken token, and the whole point of
+`agentWorktreesPlus.statusPollSeconds` is one unbroken token, and the whole point of
 printing it is that it can be read.
 
 ## Two empty states

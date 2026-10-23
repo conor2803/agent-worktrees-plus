@@ -1,58 +1,20 @@
 name: Release
 
-# Push a version tag to publish; the run compiles, packages the .vsix, creates a
-# GitHub release, and publishes to the VS Code Marketplace when VSCE_PAT is set. The
-# version is the single source of truth and is injected into package.json at build
-# time (the committed "version" is just a placeholder and is never edited by hand).
+# Push a version tag to release; the run compiles, tests, packages the .vsix and
+# attaches it to a GitHub release. There is no Marketplace publish: the .vsix on
+# the release is how the extension is distributed. The version is the single
+# source of truth and is injected into package.json at build time (the committed
+# "version" is a placeholder and is never edited by hand).
 #
-# The release channel is chosen per release, not encoded in the version number:
+#   git tag v0.2.0     && git push origin v0.2.0       -> regular release
+#   git tag v0.2.0-pre && git push origin v0.2.0-pre   -> GitHub pre-release
 #
-#   git tag v4.5.0     && git push origin v4.5.0       -> regular channel
-#   git tag v4.5.0-pre && git push origin v4.5.0-pre   -> pre-release channel
+# Both build the plain version (0.2.0); the `-pre` suffix only marks the release.
+# A version is spent by whichever tag uses it first.
 #
-# Both publish the plain version (4.5.0); the `-pre` suffix names the channel and
-# never reaches the manifest. The manual workflow_dispatch run takes the channel
-# as an input instead.
-#
-# So the version is free: any X.Y.Z that is higher than the last one, with one
-# house rule - the patch is always at least two digits (Z >= 10), so a fresh
-# minor starts at X.Y.10 and never X.Y.0. Bump the patch as far as you like
-# (4.4.31, 4.4.32, ... 4.4.1001), bump the minor by one, whatever suits the
-# change. This replaced a scheme where the minor's PARITY
-# picked the channel (odd = pre-release, even = regular), which is what the VS
-# Code docs recommend but nothing enforces: vsce validates only that the version
-# is valid semver with no prerelease suffix (see validateVersion /
-# validateManifestForPublishing in @vscode/vsce), so parity was costing every
-# stable minor a skipped number for a line that mostly went unused.
-#
-# What the parity bought, and what replaces it: the two channels shared no version
-# numbers, so a preview could never consume a stable one. Now they do share a
-# line, and the Marketplace is explicit that they cannot overlap - "if 1.2.3 is
-# uploaded as a pre-release, the next regular release must be uploaded with a
-# distinct version, such as 1.2.4"
-# (code.visualstudio.com/api/working-with-extensions/publishing-extension).
-# So **a pre-release of 4.5.0 means the stable release of that work is 4.5.1**. The "already released" check in the resolve step below catches the
-# mistake before anything is published rather than at the Marketplace.
-#
-# A pre-release tag may point at a PR branch head - previewing unmerged work is
-# the point of the channel - while regular releases are only ever tagged on main.
-#
-# Publishing any pre-release build is what makes the "Switch to Pre-Release Version"
-# button appear on the listing; users opt in per-install.
-#
-# Both triggers already require push/write access, so a random fork or contributor
-# cannot start a release. Two further gates narrow that to the owner:
-#
-#   - the guard job below fails the run unless github.actor is the repository owner;
-#   - the publish job targets the protected "release" environment, which only accepts
-#     main or a v* tag. VSCE_PAT lives in that environment, so no other job in any
-#     workflow can read it, and editing this file to drop the guard does not get you
-#     the token.
-#
-# The environment has no required reviewer: a tag push publishes without a click.
-# Write access is what starts a release, and the owner is the only collaborator, so
-# an approval step only ever guarded the owner against themselves. Fork PRs cannot
-# reach any of this: their workflows need approval before they run at all.
+# Only the repository owner can release: the guard job fails the run for anyone
+# else, and the publish job targets the "release" environment, restricted to main
+# and v* tags.
 on:
   push:
     tags:
@@ -95,8 +57,6 @@ jobs:
     needs: guard
     runs-on: ubuntu-latest
     environment: release
-    env:
-      VSCE_PAT: ${{ secrets.VSCE_PAT }}
     steps:
       - uses: actions/checkout@v4
 
@@ -140,14 +100,6 @@ jobs:
           # RELEASED version. Caught here, where the message can say what is wrong.
           if ! printf '%s' "$version" | grep -Eq '^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$'; then
             echo "::error::'$version' is not a plain X.Y.Z version. Each part must be a number with no leading zero (4.4.10, not 4.4.010). The only suffix a tag may carry is '-pre', which selects the pre-release channel (v4.5.0-pre publishes 4.5.0)."
-            exit 1
-          fi
-          # House rule: the patch is always at least two digits. A new minor
-          # starts at X.Y.10, not X.Y.0, so every released version reads the
-          # same shape (v4.5.30, v4.6.10) and a single-digit patch is caught as
-          # a typo here rather than published.
-          if [ "${version##*.}" -lt 10 ]; then
-            echo "::error::'$version' has a single-digit patch. The patch is always at least two digits: a new minor starts at X.Y.10 (v4.6.10, not v4.6.0), and a patch release bumps from there (v4.5.31)."
             exit 1
           fi
           if [ "$channel" = "pre-release" ]; then
@@ -203,20 +155,20 @@ jobs:
           TAG: ${{ steps.channel.outputs.tag }}
         run: |
           set -euo pipefail
-          before="$(grep -c "/agent-worktrees/main/images/" MARKETPLACE.md)"
+          before="$(grep -c "/agent-worktrees-plus/main/images/" MARKETPLACE.md)"
           if [ "$before" -eq 0 ]; then
             echo "::error::No main-pinned image URLs found in MARKETPLACE.md. The listing's screenshot URLs changed shape - update this step, or a release will ship unpinned images."
             exit 1
           fi
-          sed -i "s#/agent-worktrees/main/images/#/agent-worktrees/$TAG/images/#g" MARKETPLACE.md
+          sed -i "s#/agent-worktrees-plus/main/images/#/agent-worktrees-plus/$TAG/images/#g" MARKETPLACE.md
           echo "Pinned $before screenshot URL(s) to $TAG."
-          if grep -q "/agent-worktrees/main/images/" MARKETPLACE.md; then
+          if grep -q "/agent-worktrees-plus/main/images/" MARKETPLACE.md; then
             echo "::error::Some image URLs still point at main after rewriting."
             exit 1
           fi
 
       - name: Package extension
-        run: npx --yes @vscode/vsce package ${{ steps.channel.outputs.pre_release_flag }} --readme-path MARKETPLACE.md --out agent-worktrees.vsix
+        run: npx --yes @vscode/vsce package ${{ steps.channel.outputs.pre_release_flag }} --readme-path MARKETPLACE.md --out agent-worktrees-plus.vsix
 
       # On a tag push the tag already exists; on a manual run gh creates it at this commit
       # (a tag created with GITHUB_TOKEN does not re-trigger the push-tag run above).
@@ -226,12 +178,8 @@ jobs:
           PRERELEASE_FLAG: ${{ steps.channel.outputs.pre_release_flag }}
           TAG: ${{ steps.channel.outputs.tag }}
         run: |
-          gh release create "$TAG" agent-worktrees.vsix \
+          gh release create "$TAG" agent-worktrees-plus.vsix \
             --title "$TAG" \
             --target "$GITHUB_SHA" \
             --generate-notes \
             ${PRERELEASE_FLAG:+--prerelease}
-
-      - name: Publish to VS Code Marketplace
-        if: ${{ env.VSCE_PAT != '' }}
-        run: npx --yes @vscode/vsce publish ${{ steps.channel.outputs.pre_release_flag }} --packagePath agent-worktrees.vsix -p "$VSCE_PAT"

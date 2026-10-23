@@ -1,6 +1,16 @@
 # Changelog
 
-All notable changes to the Agent Worktrees extension are documented here.
+All notable changes to Agent Worktrees Plus are documented here. Entries from
+4.6.12 down are from the original Agent Worktrees, which this fork is based on.
+
+## 0.1.0 (unreleased)
+
+### Changes
+
+- **Forked from Agent Worktrees 4.6.12 as Agent Worktrees Plus.** Commands and
+  settings moved from `agentWorktrees.*` to `agentWorktreesPlus.*`; settings
+  from the original are not carried over. Releases ship as a `.vsix` on GitHub,
+  not on the Marketplace.
 
 ## 4.6.12
 

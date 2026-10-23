@@ -27,7 +27,7 @@ export interface WaitingAgent {
 export type NotifyMode = "off" | "unfocused" | "focused" | "always";
 
 /** Config key for the waiting-agent mode. */
-export const NOTIFY_WAITING_SETTING = "agentWorktrees.notifyWaiting";
+export const NOTIFY_WAITING_SETTING = "agentWorktreesPlus.notifyWaiting";
 
 const MODES: readonly NotifyMode[] = ["off", "unfocused", "focused", "always"];
 

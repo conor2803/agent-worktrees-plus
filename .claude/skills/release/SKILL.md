@@ -10,8 +10,7 @@ channel). That triggers
 `.github/workflows/release.yml`, which sets the version from the tag, runs
 `npm ci` + `npm run compile` + `npm test`, packages the `.vsix` (with
 `MARKETPLACE.md` as the listing readme), creates a GitHub release with the
-`agent-worktrees.vsix` asset, and publishes to the VS Code Marketplace when
-`VSCE_PAT` is set.
+`agent-worktrees-plus.vsix` asset. There is no Marketplace publish.
 
 ```mermaid
 flowchart LR
@@ -20,8 +19,7 @@ flowchart LR
   B --> C["strip -pre -> channel<br/>plain X.Y.Z -> npm version<br/>(package.json is a placeholder)"]
   C --> D[compile + test]
   D --> E["vsce package<br/>+/- --pre-release"]
-  E --> F[GitHub release]
-  E --> G["vsce publish<br/>Marketplace"]
+  E --> F["GitHub release<br/>+ .vsix"]
 ```
 
 ## The version lives in the git tag, not package.json
@@ -90,19 +88,13 @@ half-finished release.
 
 2. **Compute the next version** from that latest version. Plain `X.Y.Z`, higher
    than the last release, and nothing else is reserved:
-   - patch: bump Z (`v4.5.30` -> `v4.5.31`) - bug fixes, packaging, docs, screenshots
-   - minor: bump Y, reset Z to **10** (`v4.5.31` -> `v4.6.10`) - new features
-   - major: bump X, reset Y and Z (`v4.6.10` -> `v5.0.10`) - breaking changes
-
-   **Z always has at least two digits.** A new minor or major starts at
-   `X.Y.10`, never `X.Y.0`, so every released version reads the same shape
-   (`v4.5.30`, `v4.6.10`) and a single-digit patch is a typo. `release.yml`
-   rejects a tag whose patch is under 10. The older single-digit tags
-   (`v4.5.0-pre` to `v4.5.3-pre`) predate the rule and stay spent.
+   - patch: bump Z (`v0.1.0` -> `v0.1.1`) - bug fixes, packaging, docs, screenshots
+   - minor: bump Y, reset Z to 0 (`v0.1.3` -> `v0.2.0`) - new features
+   - major: bump X, reset Y and Z (`v0.2.0` -> `v1.0.0`) - breaking changes
 
    The same numbers serve both channels; the tag's `-pre` suffix is what picks
-   one. Since a version is only publishable once, a preview spends it: after
-   `v4.5.0-pre`, the stable release of that work is `v4.5.1`.
+   one. A version is spent by whichever tag uses it first: after `v0.2.0-pre`,
+   the regular release of that work is `v0.2.1`.
 
    **Z is a number, not a digit.** It keeps counting - `v4.5.10` ->
    `v4.5.31` -> `v4.5.1001` - and reaching three or four figures is
@@ -167,20 +159,17 @@ half-finished release.
    (`vX.Y.Z-pre` for a pre-release; `isPrerelease` should be `true` for it and
    `false` for a regular release.)
 
-   A healthy run shows the `Publish to VS Code Marketplace` step green and an
-   `agent-worktrees.vsix` asset on the release. If `VSCE_PAT` is unset the
-   Marketplace step is skipped but the GitHub release + `.vsix` are still
-   produced.
+   A healthy run shows an `agent-worktrees-plus.vsix` asset on the release.
 
 ## Notes
 
 - `images/` and `screenshots/` are excluded from the packaged `.vsix`; the
-  Marketplace listing loads PNGs from raw GitHub URLs, so the release does not
+  `MARKETPLACE.md` readme loads PNGs from raw GitHub URLs, so the release does not
   bundle them. Those URLs point at `main` in the repo, and the workflow rewrites
   them to the release's tag in the working tree just before `vsce package` (never
   committing that), so a published listing keeps the screenshots of the build it
   is selling rather than tracking main. The step **fails the release** if it finds
-  no `/agent-worktrees/main/images/` URLs to rewrite - if you reshape those URLs
+  no `/agent-worktrees-plus/main/images/` URLs to rewrite - if you reshape those URLs
   in `MARKETPLACE.md`, update the step with them.
 - Tagging via the manual workflow uses `GITHUB_TOKEN`, which does not re-trigger
   the push-tag run - that is intentional, not a failure.

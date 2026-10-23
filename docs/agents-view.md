@@ -186,7 +186,7 @@ Which status leads is a matter of taste - someone watching a fan-out cares about
 **active**, someone triaging cares about **waiting** - so the order is the user's,
 set in **Settings → Preferences** with an up/down control per status.
 
-- Stored in `agentWorktrees.agentStatusOrder` (a real VS Code setting, so it
+- Stored in `agentWorktreesPlus.agentStatusOrder` (a real VS Code setting, so it
   syncs and can be edited in `settings.json` like any other), applying to every
   repository. The worktree cards are unaffected: there each agent is already on
   the card for the code it is working on.
@@ -209,7 +209,7 @@ set in **Settings → Preferences** with an up/down control per status.
 flowchart LR
     P["Settings → Preferences<br/>up / down per status"] -->|"moveAgentStatus {status, delta}"| X[WorktreeWebviewProvider]
     X --> N["normalizeAgentStatusOrder(setting)<br/>then moveAgentStatus"]
-    N -->|"update(agentWorktrees.agentStatusOrder)"| C[(VS Code settings)]
+    N -->|"update(agentWorktreesPlus.agentStatusOrder)"| C[(VS Code settings)]
     C --> R["repostSettings()<br/>data.agentStatusOrder"]
     R --> V["panel: statusOrder(data)<br/>normalized again"]
     V --> L["agentsList sort key"]

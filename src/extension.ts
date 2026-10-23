@@ -11,12 +11,12 @@ import {
   disposeDiagnostics,
 } from "./diagnostics";
 
-const TRACE_SETTING = "agentWorktrees.trace";
+const TRACE_SETTING = "agentWorktreesPlus.trace";
 /** The panel reads this per poll tick, so a change takes effect on its own. It
  *  still needs a re-render: Settings → Performance shows the current rate, and
  *  the user may have edited it in VS Code's own Settings UI instead. */
-const POLL_SECONDS_SETTING = "agentWorktrees.statusPollSeconds";
-const STATUS_ORDER_SETTING = "agentWorktrees.agentStatusOrder";
+const POLL_SECONDS_SETTING = "agentWorktreesPlus.statusPollSeconds";
+const STATUS_ORDER_SETTING = "agentWorktreesPlus.agentStatusOrder";
 
 /** Read the trace setting and wire git + GitHub tracing to match it. */
 function applyTraceSetting(): void {
@@ -56,20 +56,20 @@ export function activate(context: vscode.ExtensionContext) {
       { webviewOptions: { retainContextWhenHidden: true } }
     ),
 
-    vscode.commands.registerCommand("worktreeView.refresh", () =>
+    vscode.commands.registerCommand("agentWorktreesPlusView.refresh", () =>
       provider.refresh(true)
     ),
 
-    vscode.commands.registerCommand("worktreeView.newWorktree", () =>
+    vscode.commands.registerCommand("agentWorktreesPlusView.newWorktree", () =>
       provider.newWorktree()
     ),
 
-    vscode.commands.registerCommand("worktreeView.settings", () =>
+    vscode.commands.registerCommand("agentWorktreesPlusView.settings", () =>
       provider.openSettings()
     ),
 
     // Flip the trace setting and reveal the log, so tracing is one click away.
-    vscode.commands.registerCommand("worktreeView.toggleTrace", async () => {
+    vscode.commands.registerCommand("agentWorktreesPlusView.toggleTrace", async () => {
       const cfg = vscode.workspace.getConfiguration();
       const next = !cfg.get<boolean>(TRACE_SETTING, false);
       await cfg.update(TRACE_SETTING, next, vscode.ConfigurationTarget.Global);
@@ -79,7 +79,7 @@ export function activate(context: vscode.ExtensionContext) {
       );
     }),
 
-    vscode.commands.registerCommand("worktreeView.showLog", () =>
+    vscode.commands.registerCommand("agentWorktreesPlusView.showLog", () =>
       showDiagnostics()
     ),
 

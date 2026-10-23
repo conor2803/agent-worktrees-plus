@@ -18,7 +18,7 @@ import { managesUserSettings } from "../../hooks";
 suite("Agent Worktrees extension host", () => {
   test("activates without throwing", async () => {
     const ext = vscode.extensions.getExtension(
-      "bradenterry.agent-worktrees"
+      "conor2803.agent-worktrees-plus"
     );
     assert.ok(ext, "the extension is installed in the test host");
     await ext.activate();
@@ -46,7 +46,7 @@ suite("Agent Worktrees extension host", () => {
     // And prove it end to end: this suite activated the extension above, so if
     // the guard were missing, any hook entry naming this host's scratch storage
     // would already have been rewritten out of the real file.
-    const ext = vscode.extensions.getExtension("bradenterry.agent-worktrees");
+    const ext = vscode.extensions.getExtension("conor2803.agent-worktrees-plus");
     await ext?.activate();
     const settingsPath = path.join(os.homedir(), ".claude", "settings.json");
     let raw: string;
@@ -63,16 +63,16 @@ suite("Agent Worktrees extension host", () => {
 
   test("registers its commands", async () => {
     const ext = vscode.extensions.getExtension(
-      "bradenterry.agent-worktrees"
+      "conor2803.agent-worktrees-plus"
     );
     await ext?.activate();
     const cmds = await vscode.commands.getCommands(true);
     for (const id of [
-      "worktreeView.refresh",
-      "worktreeView.newWorktree",
-      "worktreeView.settings",
-      "worktreeView.toggleTrace",
-      "worktreeView.showLog",
+      "agentWorktreesPlusView.refresh",
+      "agentWorktreesPlusView.newWorktree",
+      "agentWorktreesPlusView.settings",
+      "agentWorktreesPlusView.toggleTrace",
+      "agentWorktreesPlusView.showLog",
     ]) {
       assert.ok(cmds.includes(id), `command not registered: ${id}`);
     }

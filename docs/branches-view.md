@@ -69,7 +69,7 @@ external call.
 
 - Surfaced under **Settings → Debug** (a toggle plus **Open log**), and also
   flipped by the "Toggle Debug Tracing" command. Both write the same
-  `agentWorktrees.trace` config, re-applied by the host's
+  `agentWorktreesPlus.trace` config, re-applied by the host's
   `onDidChangeConfiguration` handler.
 - `git.ts` and `github.ts` each take an injected tracer (`setGitTracer` /
   `setGithubTracer`) wired by the extension host to the diagnostics channel, so

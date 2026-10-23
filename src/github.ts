@@ -12,7 +12,7 @@ import { RemoteInfo } from "./git";
  * was unreachable.
  */
 
-const PAT_KEY = "agentWorktrees.githubPat";
+const PAT_KEY = "agentWorktreesPlus.githubPat";
 const API = "https://api.github.com";
 const UA = "agent-worktrees";
 

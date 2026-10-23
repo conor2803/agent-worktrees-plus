@@ -183,7 +183,7 @@ const WATCHED_STATUS_TTL_MS = 30_000;
 /** Setting holding the poll rate, in seconds, for a card with no change event of
  *  its own. Bounds and default live in statusPoll.ts, which is also what
  *  defends against a value settings.json should not contain. */
-const POLL_SECONDS_SETTING = "agentWorktrees.statusPollSeconds";
+const POLL_SECONDS_SETTING = "agentWorktreesPlus.statusPollSeconds";
 
 /**
  * How many full gathers one un-carded working directory may trigger.
@@ -207,14 +207,14 @@ const POLL_SECONDS_SETTING = "agentWorktrees.statusPollSeconds";
 const REGATHER_TRIES = 3;
 
 /** globalState key for the opt-in Source Control scope button. */
-const SCM_SCOPE_KEY = "agentWorktrees.scmScopeEnabled";
+const SCM_SCOPE_KEY = "agentWorktreesPlus.scmScopeEnabled";
 /** globalState key for the worktree the user last scoped Source Control to, so
  *  the panel highlights a single active scope independently of which repos the
  *  Git extension happens to keep open. */
-const SCM_SCOPED_PATH_KEY = "agentWorktrees.scmScopedPath";
+const SCM_SCOPED_PATH_KEY = "agentWorktreesPlus.scmScopedPath";
 
 /** Config key for the debug-tracing toggle, surfaced in Settings → Debug. */
-const TRACE_SETTING = "agentWorktrees.trace";
+const TRACE_SETTING = "agentWorktreesPlus.trace";
 
 /** The one action on a waiting-agent notification. Compared by identity with
  *  what showInformationMessage resolves to, so it has to be the same string
@@ -227,7 +227,7 @@ const OPEN_PR = "Open PR";
  *  Settings → Preferences. A real setting rather than webview state: it is a
  *  preference about the panel, so it belongs where the user's other ones are
  *  (and syncs with them). Sanitized on every read - see agentOrder.ts. */
-const AGENT_STATUS_ORDER_SETTING = "agentWorktrees.agentStatusOrder";
+const AGENT_STATUS_ORDER_SETTING = "agentWorktreesPlus.agentStatusOrder";
 
 /** globalState key for the per-repo worktree groups (the sections the cards list
  *  is divided into). Value is a map of repo root -> GroupState, the same shape
@@ -236,7 +236,7 @@ const AGENT_STATUS_ORDER_SETTING = "agentWorktrees.agentStatusOrder";
  *  structure the user built rather than a preference, so it belongs in the
  *  extension's own storage and not in settings.json. globalState (not
  *  workspaceState) so a second window on the same repo shows the same sections. */
-const GROUPS_KEY = "agentWorktrees.groups";
+const GROUPS_KEY = "agentWorktreesPlus.groups";
 
 /** What a group is called between being created and being named. Placeholder
  *  text in the field would be lost the moment the user typed anything and then
@@ -248,7 +248,7 @@ const NEW_GROUP_NAME = "New group";
  *  (Settings → Linked Files). Value is a map of repo root → relative paths; a
  *  map (not a single array) keeps each repo's list separate while living in the
  *  extension's own storage rather than the repo's .vscode/settings.json. */
-const LINKED_PATHS_KEY = "agentWorktrees.linkedPaths";
+const LINKED_PATHS_KEY = "agentWorktreesPlus.linkedPaths";
 
 /** Messages sent from the webview to the extension. */
 interface ActionMessage {
@@ -352,7 +352,7 @@ interface ActionMessage {
 export class WorktreeWebviewProvider
   implements vscode.WebviewViewProvider, vscode.Disposable
 {
-  public static readonly viewType = "worktreeView.panel";
+  public static readonly viewType = "agentWorktreesPlusView.panel";
 
   private view?: vscode.WebviewView;
 
@@ -1658,7 +1658,7 @@ export class WorktreeWebviewProvider
       case "relinkWorktrees":
         return this.relinkWorktrees();
       case "showLog":
-        return void vscode.commands.executeCommand("worktreeView.showLog");
+        return void vscode.commands.executeCommand("agentWorktreesPlusView.showLog");
       case "scopeScm":
         return this.scopeScm(msg.path);
       case "debugWorktree":
@@ -1876,7 +1876,7 @@ export class WorktreeWebviewProvider
   /**
    * Set the poll rate from its control in Settings → Performance.
    *
-   * Written to the same `agentWorktrees.statusPollSeconds` setting the Settings
+   * Written to the same `agentWorktreesPlus.statusPollSeconds` setting the Settings
    * UI edits, and clamped here rather than trusted: the control offers a fixed
    * list, but a stale payload must not be able to talk us into a rate that means
    * a git spawn per tick. Nothing needs restarting - the rate is read per tick.
@@ -1989,7 +1989,7 @@ export class WorktreeWebviewProvider
 
   /**
    * Turn debug tracing on/off from the Settings → Debug tab. Writes the same
-   * `agentWorktrees.trace` config the toggleTrace command flips, so the host's
+   * `agentWorktreesPlus.trace` config the toggleTrace command flips, so the host's
    * onDidChangeConfiguration handler re-wires git/GitHub tracing. Re-renders so
    * the toggle reflects the new state.
    */
@@ -3968,7 +3968,7 @@ export class WorktreeWebviewProvider
       return;
     }
     const panel = vscode.window.createWebviewPanel(
-      "worktreeView.branches",
+      "agentWorktreesPlusView.branches",
       "Branches",
       vscode.ViewColumn.Active,
       {

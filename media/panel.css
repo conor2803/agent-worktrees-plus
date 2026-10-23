@@ -2061,7 +2061,7 @@ button.busy {
   border-radius: 3px;
   background: var(--vscode-textCodeBlock-background, rgba(128, 128, 128, 0.18));
   /* A setting id is one long unbroken token and the sidebar is narrow, so
-     `agentWorktrees.statusPollSeconds` ran past the panel's edge and was clipped
+     `agentWorktreesPlus.statusPollSeconds` ran past the panel's edge and was clipped
      mid-word with no scrollbar to reach the rest. Broken anywhere rather than
      truncated: the whole point of printing the id is that it can be read. */
   overflow-wrap: anywhere;
