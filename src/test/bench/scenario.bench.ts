@@ -186,4 +186,16 @@ suite("Agent Worktrees Plus benchmark", () => {
       startAgent(fx, "alpha-new", wt);
       await sleep(PHASE_MS / 3);
     }));
+
+  test("switch repo: the Active Repo changes, then changes back", async function () {
+    const commands = await vscode.commands.getCommands(true);
+    if (!commands.includes("agentWorktreesPlusView.switchRepo")) return this.skip();
+    const id = (r: BenchRepo) => fs.realpathSync.native(path.join(r.primary, ".git"));
+    await phase("switchRepo", async () => {
+      for (const r of [bravo, alpha, charlie, alpha, bravo, alpha]) {
+        await vscode.commands.executeCommand("agentWorktreesPlusView.switchRepo", id(r));
+        await sleep(PHASE_MS / 6);
+      }
+    });
+  });
 });

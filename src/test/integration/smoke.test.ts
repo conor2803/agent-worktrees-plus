@@ -73,6 +73,7 @@ suite("Agent Worktrees extension host", () => {
       "agentWorktreesPlusView.settings",
       "agentWorktreesPlusView.toggleTrace",
       "agentWorktreesPlusView.showLog",
+      "agentWorktreesPlusView.switchRepo",
     ]) {
       assert.ok(cmds.includes(id), `command not registered: ${id}`);
     }

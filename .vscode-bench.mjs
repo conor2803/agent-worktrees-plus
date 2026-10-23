@@ -11,6 +11,11 @@ const out = process.env.BENCH_OUT ?? path.resolve("bench/results/latest.json");
 export default defineConfig({
   files: "out/test/bench/**/*.bench.js",
   version: "stable",
+  // A checkout under .worktrees/ makes the default user-data dir's socket path
+  // longer than macOS allows; point this somewhere short to run from one.
+  launchArgs: process.env.VSCODE_TEST_USER_DATA
+    ? ["--user-data-dir", process.env.VSCODE_TEST_USER_DATA]
+    : [],
   workspaceFolder: fixture.workspaceFile,
   env: {
     CLAUDE_CONFIG_DIR: fixture.claudeDir,

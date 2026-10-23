@@ -27,6 +27,15 @@ and its running agents in one view.
 - A Branches tab for every branch in the repo.
 - Four worktrees in the height one card used to take.
 
+## Several repositories in one window
+
+Open more than one repository in a window and the panel's header becomes a
+dropdown: pick the repository to show. Each window remembers its own choice. The
+repositories you are not looking at still tell you when one of their agents is
+waiting for you: in the dropdown, on the Activity Bar badge and with a
+notification. **Switch Repository** in the Command Palette does the same from the
+keyboard.
+
 ## Agents
 
 - A Claude CLI session in any worktree, each in its own terminal.

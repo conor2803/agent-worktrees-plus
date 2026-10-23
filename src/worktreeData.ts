@@ -167,7 +167,20 @@ export interface GitPerfVM {
   statusWasSlow?: boolean;
 }
 
+/** One entry of the Active Repo dropdown. */
+export interface RepoOptionVM {
+  id: string;
+  label: string;
+  active: boolean;
+  /** Agents Waiting in this Repo. */
+  waiting: number;
+}
+
 export interface WorktreeData {
+  /** The Repo this payload was gathered for; see repos.ts. */
+  repoId?: string;
+  /** The window's Repos, when it has more than one to choose between. */
+  repos?: RepoOptionVM[];
   repoRoot?: string;
   repoName?: string;
   worktrees: WorktreeVM[];
@@ -229,22 +242,17 @@ const repoRootCache = new Map<string, string>();
  *  its own `git worktree list` spawn. */
 const primaryPathCache = new Map<string, string>();
 
-/**
- * First workspace folder that lives in a git repository, with its repo root.
- */
-async function findRepo(): Promise<
-  { cwd: string; repoRoot: string } | undefined
-> {
-  for (const f of vscode.workspace.workspaceFolders ?? []) {
-    const key = f.uri.fsPath;
-    let root = repoRootCache.get(key);
-    if (!root) {
-      root = (await findRepoRoot(key)) ?? undefined;
-      if (root) repoRootCache.set(key, root);
-    }
-    if (root) return { cwd: key, repoRoot: root };
+/** The Active Repo's workspace folder, with the root of the Worktree it is in. */
+async function findRepo(
+  folder: string | undefined
+): Promise<{ cwd: string; repoRoot: string } | undefined> {
+  if (!folder) return undefined;
+  let root = repoRootCache.get(folder);
+  if (!root) {
+    root = (await findRepoRoot(folder)) ?? undefined;
+    if (root) repoRootCache.set(folder, root);
   }
-  return undefined;
+  return root ? { cwd: folder, repoRoot: root } : undefined;
 }
 
 /** Index of a path within the current workspace folders, or -1. */
@@ -255,7 +263,7 @@ export function folderIndex(fsPath: string): number {
 }
 
 /**
- * Gather worktrees of the repo containing the first workspace folder.
+ * Gather the Worktrees of the Repo reached through `folder` (the Active Repo's).
  *
  * Entirely local: `git worktree list` plus a `git status` per worktree, no
  * network call anywhere in it. That is deliberate and it is what makes a
@@ -266,10 +274,11 @@ export function folderIndex(fsPath: string): number {
  * whatever the local refs say, and the fetch's own re-gather corrects them.
  */
 export async function gatherWorktrees(
+  folder: string | undefined,
   registry: RegistrySession[] = [],
   reader?: TranscriptReader
 ): Promise<WorktreeData> {
-  const repo = await findRepo();
+  const repo = await findRepo(folder);
   if (!repo) return { worktrees: [] };
   const { repoRoot } = repo;
 
@@ -445,8 +454,8 @@ export interface BranchData {
  * Git-only branch list (no network). PR data + github fields are attached by
  * the webview, mirroring how gatherWorktrees + attachPrStatus split work.
  */
-export async function gatherBranches(): Promise<BranchData> {
-  const repo = await findRepo();
+export async function gatherBranches(folder: string | undefined): Promise<BranchData> {
+  const repo = await findRepo(folder);
   if (!repo) return { branches: [] };
   const { repoRoot } = repo;
 

@@ -21,20 +21,6 @@ export function worktreeDirFor(primary: string, branch: string): string {
 }
 
 /**
- * Count of agents that need the user (status "waiting") across all worktrees.
- * Drives the number badge on the panel's Activity Bar icon.
- */
-export function countWaitingAgents(
-  worktrees: ReadonlyArray<{ agents: ReadonlyArray<{ status: string }> }>
-): number {
-  let n = 0;
-  for (const wt of worktrees) {
-    for (const a of wt.agents) if (a.status === "waiting") n++;
-  }
-  return n;
-}
-
-/**
  * Whether this host titles agent terminals from the CLI's own OSC title escape
  * sequence, which is what lets Claude Code name its tab (background tabs
  * included) instead of the extension renaming it.
