@@ -253,6 +253,7 @@ The rationale behind the parts that are easy to get wrong twice:
 | [Terminal tab titles](docs/terminal-titles.md) | Why the extension does not pass `name` to `createTerminal` |
 | [Linked files](docs/linked-files.md) | The symlink list and the Windows junction/hard-link fallbacks |
 | [Searching a worktree](docs/worktree-search.md) | Scoping Find in Files to a worktree, the `git ls-files` picker, and why neither mounts a workspace folder |
+| [Performance](docs/performance.md) | The counters, the `npm run bench` benchmark, its synthetic world and phases, and the recorded results |
 
 ## Requirements
 

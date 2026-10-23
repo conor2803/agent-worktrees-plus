@@ -10,6 +10,7 @@ import {
   showDiagnostics,
   disposeDiagnostics,
 } from "./diagnostics";
+import { perf } from "./perf";
 
 const TRACE_SETTING = "agentWorktreesPlus.trace";
 /** The panel reads this per poll tick, so a change takes effect on its own. It
@@ -17,6 +18,8 @@ const TRACE_SETTING = "agentWorktreesPlus.trace";
  *  the user may have edited it in VS Code's own Settings UI instead. */
 const POLL_SECONDS_SETTING = "agentWorktreesPlus.statusPollSeconds";
 const STATUS_ORDER_SETTING = "agentWorktreesPlus.agentStatusOrder";
+/** How often the output channel gets a line of the counters (see perf.ts). */
+const PERF_LOG_MS = 60_000;
 
 /** Read the trace setting and wire git + GitHub tracing to match it. */
 function applyTraceSetting(): void {
@@ -28,7 +31,7 @@ function applyTraceSetting(): void {
   setGithubTracer(on ? trace : null); // per-request GitHub tracing
 }
 
-export function activate(context: vscode.ExtensionContext) {
+export function activate(context: vscode.ExtensionContext): { perf: typeof perf } {
   // Route git diagnostics to the "Agent Worktrees" output channel so a user can
   // see why a view fails (the Windows "Branches never loads" reports otherwise
   // leave no trace, since the panel swallows errors to stay resilient).
@@ -96,8 +99,22 @@ export function activate(context: vscode.ExtensionContext) {
     }),
 
     // Keep the panel in sync when folders change by any means.
-    vscode.workspace.onDidChangeWorkspaceFolders(() => provider.refresh())
+    vscode.workspace.onDidChangeWorkspaceFolders(() => {
+      perf.count("trigger.workspaceFolders");
+      void provider.refresh();
+    })
   );
+
+  const activatedAt = Date.now();
+  const perfLog = setInterval(() => {
+    const line = perf.summaryLine();
+    if (!line) return;
+    const minutes = Math.round((Date.now() - activatedAt) / 60_000);
+    diag(`perf (${minutes} min since activation): ${line}`);
+  }, PERF_LOG_MS);
+  context.subscriptions.push({ dispose: () => clearInterval(perfLog) });
+
+  return { perf };
 }
 
 export function deactivate() {}

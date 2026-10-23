@@ -1,6 +1,7 @@
 import { execFile } from "child_process";
 import { promisify } from "util";
 import { dirname, isAbsolute } from "path";
+import { perf } from "./perf";
 
 const execFileAsync = promisify(execFile);
 
@@ -108,11 +109,21 @@ function ceilingFor(cwd: string | undefined): string | undefined {
  * arbitrary folder inside a repository (the open folder can be a subdirectory,
  * where walking up is the whole point).
  */
+/** The git subcommand an argument list runs, past any leading `-c k=v` / `-C dir`. */
+export function subcommand(args: string[]): string {
+  for (let i = 0; i < args.length; i++) {
+    if (args[i] === "-c" || args[i] === "-C") i++;
+    else if (!args[i].startsWith("-")) return args[i];
+  }
+  return "unknown";
+}
+
 function git(
   args: string[],
   opts: { cwd?: string; timeout?: number; atRoot?: boolean } = {}
 ): Promise<{ stdout: string; stderr: string }> {
   const { atRoot, ...execOpts } = opts;
+  perf.count(`git.${subcommand(args)}`);
   const ceiling = atRoot ? ceilingFor(opts.cwd) : undefined;
   const run = execFileAsync("git", args, {
     timeout: GIT_TIMEOUT_MS,

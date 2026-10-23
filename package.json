@@ -176,7 +176,8 @@
     "test": "npm run compile && node --test \"test/**/*.test.js\"",
     "test:integration": "npm run compile && vscode-test",
     "screenshots": "playwright test",
-    "package": "npx --yes @vscode/vsce package --readme-path MARKETPLACE.md"
+    "package": "npx --yes @vscode/vsce package --readme-path MARKETPLACE.md",
+    "bench": "npm run compile && vscode-test --config .vscode-bench.mjs && node bench/report.mjs"
   },
   "devDependencies": {
     "@playwright/test": "^1.61.0",
