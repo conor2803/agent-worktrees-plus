@@ -8,6 +8,11 @@ import { defineConfig } from "@vscode/test-cli";
 export default defineConfig({
   files: "out/test/integration/**/*.test.js",
   version: "stable",
+  // A checkout under .worktrees/ makes the default user-data dir's socket path
+  // longer than macOS allows; point this somewhere short to run from one.
+  launchArgs: process.env.VSCODE_TEST_USER_DATA
+    ? ["--user-data-dir", process.env.VSCODE_TEST_USER_DATA]
+    : [],
   mocha: {
     ui: "tdd",
     timeout: 60000,

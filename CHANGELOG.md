@@ -5,7 +5,23 @@ All notable changes to Agent Worktrees Plus are documented here. Entries from
 
 ## 0.1.0 (unreleased)
 
+### New
+
+- **Several repositories in one window.** The panel shows one Active Repo,
+  chosen per window from a header dropdown or **Switch Repository**. Agents
+  waiting in the other repositories are counted in the dropdown and the Activity
+  Bar badge, and still raise the waiting notification.
+- **The panel counts its own work.** A line a minute in the output channel, and
+  `npm run bench` for a repeatable measurement; see docs/performance.md.
+
 ### Changes
+
+- **Less work for repositories the panel is not showing.** Git activity and
+  agents in other repositories no longer reload the panel's own.
+- **A hidden panel no longer reloads.** It catches up when shown; the badge and
+  waiting notifications do not depend on it.
+- **Scoping Source Control** closes only the active repository's other worktrees,
+  never another repository's.
 
 - **Forked from Agent Worktrees 4.6.12 as Agent Worktrees Plus.** Commands and
   settings moved from `agentWorktrees.*` to `agentWorktreesPlus.*`; settings

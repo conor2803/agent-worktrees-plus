@@ -3,7 +3,6 @@ const test = require("node:test");
 const assert = require("node:assert");
 const path = require("node:path");
 const {
-  countWaitingAgents,
   normalizePath,
   pathKey,
   repoSettingsKey,
@@ -44,16 +43,6 @@ test("normalizePath strips trailing slashes", () => {
   assert.strictEqual(normalizePath(canonical + path.sep), canonical);
   assert.ok(!/[\\/]$/.test(canonical), "no trailing separator remains");
   assert.strictEqual(normalizePath(canonical), canonical, "idempotent");
-});
-
-test("countWaitingAgents sums waiting agents across worktrees", () => {
-  const wt = (...statuses) => ({ agents: statuses.map((status) => ({ status })) });
-  assert.strictEqual(countWaitingAgents([]), 0);
-  assert.strictEqual(countWaitingAgents([wt(), wt("active", "idle")]), 0);
-  assert.strictEqual(
-    countWaitingAgents([wt("waiting", "active"), wt(), wt("waiting", "waiting")]),
-    3
-  );
 });
 
 // Windows-only: git emits an uppercase drive letter ("C:\\repo") while VS Code's

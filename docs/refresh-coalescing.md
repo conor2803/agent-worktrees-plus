@@ -39,10 +39,11 @@ more expensive than on macOS.
   shows counts for, which is the set the disagreement is visible in. It re-stats
   **only the worktree the event names** (`onRepoStateChange`), not every card:
   routing it through the full gather meant one repository moving spawned git for
-  every worktree on the panel, on the signal that fires most often. A root that
-  matches no card still falls back to a gather, since "a repository we do not
-  show" and "a card that has not been listed yet" are indistinguishable from
-  there.
+  every worktree on the panel, on the signal that fires most often. A root in
+  another Repo is ignored outright: the Git extension reports every repository
+  the window has open, and nothing another Repo does changes a card (see
+  [Active Repo](active-repo.md)). A root in the Active Repo that matches no card
+  still falls back to a gather, since it is a Worktree not listed yet.
 
 Two signals are deliberately **not** full-refresh triggers, because neither says
 anything about a working tree. Both patch the cached payload and repost, with no
@@ -224,8 +225,9 @@ mean a git spawn per tick.
   worktree skips it, halving its per-worktree spawns.
 - Per-worktree statuses run at most 4 at a time (`mapLimit`), so a many-worktree
   repo never fires an unbounded spawn burst.
-- A hidden sidebar still runs the git gather (the Activity Bar badge needs it) but
-  skips the PR/token/remote work until re-shown.
+- A hidden sidebar runs no full gather at all: being shown again gathers from
+  scratch, and the Activity Bar badge and waiting notifications are read from the
+  session registry, not from a gather (see [notifications](notifications.md)).
 - The Branches tab is only re-read while that tab is visible. Hidden behind
   another editor it skips the git-heavy branch listing and catches up when
   revealed.

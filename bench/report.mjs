@@ -33,6 +33,18 @@ for (const [name, phase] of Object.entries(result.phases)) {
       `${cell(p(phase, "p50"), base && p(base, "p50"))} | ${cell(p(phase, "p95"), base && p(base, "p95"))} |`
   );
 }
+const heap = Object.entries(result.phases)
+  .filter(([, phase]) => phase.heapMb !== undefined)
+  .map(([name, phase]) => `${name} ${phase.heapMb} MB`);
+if (heap.length) console.log(`\nExtension host heap at the end of each phase: ${heap.join(", ")}`);
+const switching = result.phases.switchRepo?.timings ?? {};
+for (const [name, label] of [
+  ["switch.snapshotPaintMs", "Switch, last snapshot painted"],
+  ["switch.paintMs", "Switch, fresh gather painted"],
+]) {
+  const t = switching[name];
+  if (t) console.log(`\n${label}: p50 ${t.p50} ms, p95 ${t.p95} ms, max ${t.max} ms (${t.count} switches)`);
+}
 const unfocused = Object.entries(result.phases).filter(([, ph]) => (ph.focusedShare ?? 1) < 0.95);
 if (unfocused.length) {
   console.log(

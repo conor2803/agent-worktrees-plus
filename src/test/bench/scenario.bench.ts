@@ -98,7 +98,7 @@ suite("Agent Worktrees Plus benchmark", () => {
   const fx: Fixture = JSON.parse(fs.readFileSync(process.env.BENCH_FIXTURE!, "utf8"));
   const [alpha, bravo, charlie, delta] = fx.repos;
   const agent = (name: string) => fx.agents.find((a) => a.name === name)!;
-  const phases: Record<string, PerfSnapshot & { ms: number; focusedShare: number }> = {};
+  const phases: Record<string, PerfSnapshot & { ms: number; focusedShare: number; heapMb: number }> = {};
   let perf: PerfCounters;
 
   async function phase(name: string, drive: () => Promise<void>) {
@@ -115,7 +115,10 @@ suite("Agent Worktrees Plus benchmark", () => {
     await drive();
     clearInterval(sampler);
     const focusedShare = samples ? Math.round((focused / samples) * 100) / 100 : 0;
-    phases[name] = { ...perf.snapshot(), ms: Date.now() - started, focusedShare };
+    // The extension host's heap is shared with the built-in extensions, so it is
+    // a trend to watch across phases, not this extension's own footprint.
+    const heapMb = Math.round(process.memoryUsage().heapUsed / 1e5) / 10;
+    phases[name] = { ...perf.snapshot(), ms: Date.now() - started, focusedShare, heapMb };
   }
 
   suiteSetup(async () => {
@@ -186,4 +189,16 @@ suite("Agent Worktrees Plus benchmark", () => {
       startAgent(fx, "alpha-new", wt);
       await sleep(PHASE_MS / 3);
     }));
+
+  test("switch repo: the Active Repo changes, then changes back", async function () {
+    const commands = await vscode.commands.getCommands(true);
+    if (!commands.includes("agentWorktreesPlusView.switchRepo")) return this.skip();
+    const id = (r: BenchRepo) => fs.realpathSync.native(path.join(r.primary, ".git"));
+    await phase("switchRepo", async () => {
+      for (const r of [bravo, alpha, charlie, alpha, bravo, alpha]) {
+        await vscode.commands.executeCommand("agentWorktreesPlusView.switchRepo", id(r));
+        await sleep(PHASE_MS / 6);
+      }
+    });
+  });
 });

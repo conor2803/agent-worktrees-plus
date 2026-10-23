@@ -148,13 +148,15 @@ there.
 
 ## Where it hangs
 
-Off `postData`, next to the Activity Bar badge, and before the
-unchanged-payload early return for the same reason the badge is: both are
-statements about the current state rather than about the DOM, and both must be
-right on a refresh that re-posts nothing.
+Off every registry read (`readAgents` → `signalWaiting`), next to the Activity
+Bar badge, rather than off a payload. Both are statements about the session
+registry, so they are read from it: that keeps them right while the panel is
+hidden (a hidden panel no longer gathers) and for every Repo in the window, not
+only the Active Repo. An Agent on a card is named by its row's label and card;
+one in another Repo by its session name and Repo.
 
 Consequence, shared with the badge: nothing fires until the panel's view has been
-resolved at least once, because that is the extension's only refresh path.
+resolved at least once, because the registry is first read by its first refresh.
 
 ## Auto-merged pull requests
 

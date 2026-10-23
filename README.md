@@ -15,9 +15,10 @@ its running agents in one view.
 
 Agent Worktrees Plus is a standalone fork of
 [Agent Worktrees](https://github.com/BradenTerry/agent-worktrees) by Braden
-Terry, taken at v4.6.12. Behaviour is unchanged from that release so far.
-Planned: working with several repositories in one window, each window choosing
-an Active Repo from its workspace folders. Commands and settings live under
+Terry, taken at v4.6.12. It adds working with several repositories in one
+window, each window choosing an Active Repo from its workspace folders, and
+counts its own work so performance claims can be checked. Commands and settings
+live under
 `agentWorktreesPlus.*`, so nothing is shared with the original; uninstall the
 original before installing this one.
 The domain language is in [CONTEXT.md](CONTEXT.md).
@@ -31,6 +32,14 @@ The domain language is in [CONTEXT.md](CONTEXT.md).
 | [<img src="https://raw.githubusercontent.com/conor2803/agent-worktrees-plus/main/images/overview.png" alt="Worktrees, git status, PRs and agents in the panel" width="240">](https://raw.githubusercontent.com/conor2803/agent-worktrees-plus/main/images/overview.png) | [<img src="https://raw.githubusercontent.com/conor2803/agent-worktrees-plus/main/images/agents-view.png" alt="The agents view: every agent in the repository in one list, a pinned one held at the top, each row naming the branch it is working on" width="240">](https://raw.githubusercontent.com/conor2803/agent-worktrees-plus/main/images/agents-view.png) | [<img src="https://raw.githubusercontent.com/conor2803/agent-worktrees-plus/main/images/pr-status.png" alt="CI checks and review status on a worktree's PR" width="240">](https://raw.githubusercontent.com/conor2803/agent-worktrees-plus/main/images/pr-status.png) | [<img src="https://raw.githubusercontent.com/conor2803/agent-worktrees-plus/main/images/settings.png" alt="GitHub PR status and integration settings" width="240">](https://raw.githubusercontent.com/conor2803/agent-worktrees-plus/main/images/settings.png) | [<img src="https://raw.githubusercontent.com/conor2803/agent-worktrees-plus/main/images/linked-files.png" alt="The Linked Files settings tab listing gitignored paths symlinked into every worktree" width="240">](https://raw.githubusercontent.com/conor2803/agent-worktrees-plus/main/images/linked-files.png) | [<img src="https://raw.githubusercontent.com/conor2803/agent-worktrees-plus/main/images/skills.png" alt="The skills modal listing the Claude skills an agent has used" width="240">](https://raw.githubusercontent.com/conor2803/agent-worktrees-plus/main/images/skills.png) |
 
 ## Features
+
+**Repos**
+
+- **[Active Repo](docs/active-repo.md)**: with several repositories open as
+  workspace folders, a dropdown in the header (or **Switch Repository**) chooses
+  which one the panel shows, per window. The others cost nothing beyond reading
+  the session registry, which still counts their waiting agents in the dropdown,
+  the Activity Bar badge and the waiting notification.
 
 **Worktrees**
 
@@ -252,6 +261,7 @@ The rationale behind the parts that are easy to get wrong twice:
 | [Run and Debug in a worktree](docs/debug-sessions.md) | Why the debug view can't be retargeted, launch.json parsing, session tracking |
 | [Terminal tab titles](docs/terminal-titles.md) | Why the extension does not pass `name` to `createTerminal` |
 | [Linked files](docs/linked-files.md) | The symlink list and the Windows junction/hard-link fallbacks |
+| [Active Repo](docs/active-repo.md) | Choosing the Repo a window shows: what identifies a Repo, what a switch drops, Agents in other Repos, scoping Source Control |
 | [Searching a worktree](docs/worktree-search.md) | Scoping Find in Files to a worktree, the `git ls-files` picker, and why neither mounts a workspace folder |
 | [Performance](docs/performance.md) | The counters, the `npm run bench` benchmark, its synthetic world and phases, and the recorded results |
 
