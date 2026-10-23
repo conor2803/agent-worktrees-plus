@@ -33,6 +33,10 @@ for (const [name, phase] of Object.entries(result.phases)) {
       `${cell(p(phase, "p50"), base && p(base, "p50"))} | ${cell(p(phase, "p95"), base && p(base, "p95"))} |`
   );
 }
+const heap = Object.entries(result.phases)
+  .filter(([, phase]) => phase.heapMb !== undefined)
+  .map(([name, phase]) => `${name} ${phase.heapMb} MB`);
+if (heap.length) console.log(`\nExtension host heap at the end of each phase: ${heap.join(", ")}`);
 const switching = result.phases.switchRepo?.timings ?? {};
 for (const [name, label] of [
   ["switch.snapshotPaintMs", "Switch, last snapshot painted"],
