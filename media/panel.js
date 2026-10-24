@@ -1864,6 +1864,44 @@
     return phrases.join(DOT_SEP);
   }
 
+  /**
+   * The Active Repo's name, or with more than one Repo in the window, the
+   * dropdown that switches between them. The other Repos carry their count of
+   * Waiting Agents, since nothing else on this panel shows them.
+   */
+  function repoName(data) {
+    const repos = data.repos || [];
+    if (repos.length < 2) {
+      return "<span>" + esc(data.repoName || "Repository") + "</span>";
+    }
+    const options = repos
+      .map(
+        (r) =>
+          '<option value="' +
+          esc(r.id) +
+          '"' +
+          (r.active ? " selected" : "") +
+          ">" +
+          esc(r.label) +
+          (!r.active && r.waiting ? " \u00b7 " + r.waiting + " waiting" : "") +
+          "</option>"
+      )
+      .join("");
+    const elsewhere = repos.reduce((n, r) => n + (r.active ? 0 : r.waiting), 0);
+    return (
+      '<span class="repo-pick">' +
+      '<select id="active-repo" class="repo-select" aria-label="Repository">' +
+      options +
+      "</select>" +
+      (elsewhere
+        ? '<span class="repo-elsewhere" data-tip="Agents waiting in other repositories">' +
+          elsewhere +
+          " waiting</span>"
+        : "") +
+      "</span>"
+    );
+  }
+
   function toolbar(data) {
     const stats = repoStats(data);
     return (
@@ -1873,9 +1911,7 @@
       // tab strip's own, so the tabs sit on it.
       '<div class="repo-bar">' +
       '<div class="repo-head">' +
-      "<span>" +
-      esc(data.repoName || "Repository") +
-      "</span>" +
+      repoName(data) +
       '<span class="tools">' +
       // Ghost like the rest of the toolbar. It wore the filled treatment as the
       // primary action, which made it the one saturated block in a row of quiet
@@ -5460,7 +5496,9 @@
   });
 
   root.addEventListener("change", (e) => {
-    if (e.target && e.target.id === "gh-enable") {
+    if (e.target && e.target.id === "active-repo") {
+      send("selectRepo", { repoId: e.target.value });
+    } else if (e.target && e.target.id === "gh-enable") {
       send("togglePr", { value: !!e.target.checked });
     } else if (e.target && e.target.id === "scm-enable") {
       send("toggleScm", { value: !!e.target.checked });

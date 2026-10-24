@@ -67,6 +67,11 @@ export function activate(context: vscode.ExtensionContext): { perf: typeof perf 
       provider.newWorktree()
     ),
 
+    vscode.commands.registerCommand(
+      "agentWorktreesPlusView.switchRepo",
+      (id?: string) => provider.switchRepo(typeof id === "string" ? id : undefined)
+    ),
+
     vscode.commands.registerCommand("agentWorktreesPlusView.settings", () =>
       provider.openSettings()
     ),
@@ -98,10 +103,10 @@ export function activate(context: vscode.ExtensionContext): { perf: typeof perf 
       if (e.affectsConfiguration(STATUS_ORDER_SETTING)) void provider.refresh();
     }),
 
-    // Keep the panel in sync when folders change by any means.
+    // A folder coming or going can add or remove a Repo, or the Active Repo.
     vscode.workspace.onDidChangeWorkspaceFolders(() => {
       perf.count("trigger.workspaceFolders");
-      void provider.refresh();
+      void provider.onWorkspaceFoldersChanged();
     })
   );
 

@@ -122,6 +122,50 @@ status for an unfocused window, so an unfocused run never sees the events that
 cost the most. The report flags any phase under 95% focused; keep the test
 window in front while it runs.
 
+### Active Repo (`bench/results/active-repo.json`)
+
+Against baseline run 1; cells read baseline → now.
+
+Recorded 2026-10-23T20:33:07.526Z on darwin-arm64, VS Code 1.143.1, window focused: true
+Baseline 2026-10-23T20:23:11.530Z; cells read baseline → now.
+
+| Phase | Full reloads/min | git commands/min | Reload ms p50 | Reload ms p95 |
+| --- | --- | --- | --- | --- |
+| idle | 1 → 1 | 7 → 7 | 203 → 211 | 203 → 211 |
+| otherReposBusy | 29 → 2 | 144.8 → 11 | 134 → 224 | 152 → 294 |
+| firstRepoBusy | 2 → 0 | 58 → 46.9 | 193 → - | 199 → - |
+| agentLifecycle | 9 → 1 | 68.7 → 14.9 | 203 → 298 | 756 → 298 |
+| switchRepo | 6.8 | 53.5 | 290 | 305 |
+
+Extension host heap at the end of each phase: idle 34 MB, otherReposBusy 36 MB, firstRepoBusy 37.3 MB, agentLifecycle 38.7 MB, switchRepo 39.9 MB
+
+Switch, last snapshot painted: p50 5 ms, p95 7 ms, max 7 ms (4 switches)
+
+Switch, fresh gather painted: p50 295 ms, p95 310 ms, max 310 ms (6 switches)
+
+NOT VALID: the window lost focus during otherReposBusy (93% focused). The Git extension does not run status for an unfocused window; rerun with the test window in front.
+
+Why full reloads happened (count per phase):
+- idle: trigger.agentPoll=60 trigger.focus=1
+- otherReposBusy: trigger.agentPoll=54 trigger.focus=2 trigger.registry=20 trigger.repoState=35
+- firstRepoBusy: trigger.agentPoll=60 trigger.registry=10 trigger.repoState=25
+- agentLifecycle: fallback.agents.unplaced=1 trigger.agentPoll=60 trigger.registry=5 trigger.repoState=4
+- switchRepo: fallback.agents.noPayload=1 trigger.agentPoll=62
+
+The run is flagged: `otherReposBusy` was 93% focused. The Git extension still
+delivered 35 of the baseline's 36 status events in that phase, and the phase's
+two full reloads are both `trigger.focus`, the window regaining focus, so its
+result stands; none came from another Repo.
+
+**Against the targets:**
+
+| Target | Result |
+| --- | --- |
+| Switching paints in under 1 second | Met. The last snapshot of the Repo paints in 5 ms, a fresh gather in 295 ms (p95 310 ms). |
+| Agents in other Repos cause zero extra full reloads | Met. 29 → 0 attributable a minute with other Repos busy; 9 → 1 through Agents starting and ending (the 1 is the Not-yet-placed Agent the phase creates, the case re-gathering exists for). |
+| A hidden panel runs no more `git` than today | Met by construction, not measured: a hidden panel now runs no full gather (`refresh.skippedHidden`). The benchmark keeps the panel visible. |
+| Memory flat over an hour | Not measured. The extension host's heap rose from 34 to 40 MB over the five-minute run, and the baseline did not record heap, so there is nothing to compare it with yet. An hour's run: `BENCH_PHASE_MS=900000 npm run bench`. |
+
 ## Your own window
 
 The benchmark's world is synthetic. To compare your real window, install a build,

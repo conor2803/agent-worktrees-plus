@@ -334,6 +334,41 @@ body {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+/* The Active Repo dropdown, standing in for the name when the window has more
+   than one Repo. Bold like the name it replaces; the dropdown's own chrome says
+   it can be changed. */
+.repo-pick {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.repo-select {
+  min-width: 0;
+  max-width: 100%;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 1px 4px;
+  border-radius: 3px;
+  color: var(--vscode-dropdown-foreground, var(--vscode-foreground));
+  background: var(--vscode-dropdown-background, var(--vscode-editor-background));
+  border: 1px solid var(--vscode-dropdown-border, var(--vscode-panel-border, rgba(128, 128, 128, 0.35)));
+  cursor: pointer;
+}
+.repo-select:focus-visible {
+  outline: 1px solid var(--vscode-focusBorder);
+  outline-offset: -1px;
+}
+/* Waiting Agents in the Repos not shown: the one thing about them worth a glance. */
+.repo-elsewhere {
+  flex: 0 0 auto;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--vscode-charts-yellow, #cca700);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
 .repo-head .tools {
   margin-left: auto;
   flex: 0 0 auto;

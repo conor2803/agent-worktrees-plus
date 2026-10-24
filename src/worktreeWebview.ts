@@ -15,14 +15,17 @@ import {
   WorktreeVM,
   BranchData,
   GitPerfVM,
+  RepoOptionVM,
 } from "./worktreeData";
+import { Repo, chooseActiveRepo } from "./repos";
+import { WorkspaceRepos, canonical } from "./workspaceRepos";
 import {
   newlyWaiting,
   noticeText,
   notifyMode,
   shouldNotify,
-  waitingAgents,
   NOTIFY_WAITING_SETTING,
+  WaitingAgent,
 } from "./waitingNotices";
 import type { NotifyMode } from "./waitingNotices";
 import {
@@ -31,7 +34,6 @@ import {
   newlyMerged,
 } from "./mergeNotices";
 import {
-  countWaitingAgents,
   pathKey,
   repoSettingsKey,
   supportsAgentCliTitle,
@@ -214,6 +216,10 @@ const SCM_SCOPE_KEY = "agentWorktreesPlus.scmScopeEnabled";
  *  Git extension happens to keep open. */
 const SCM_SCOPED_PATH_KEY = "agentWorktreesPlus.scmScopedPath";
 
+/** workspaceState key for the window's Active Repo (its id; see repos.ts).
+ *  workspaceState, not globalState, so each window keeps its own. */
+const ACTIVE_REPO_KEY = "agentWorktreesPlus.activeRepo";
+
 /** Config key for the debug-tracing toggle, surfaced in Settings → Debug. */
 const TRACE_SETTING = "agentWorktreesPlus.trace";
 
@@ -301,8 +307,11 @@ interface ActionMessage {
     | "renameGroup"
     | "deleteGroup"
     | "moveGroup"
-    | "assignGroup";
+    | "assignGroup"
+    | "selectRepo";
   path?: string;
+  /** The Repo chosen in the Active Repo dropdown, for selectRepo. */
+  repoId?: string;
   sessionId?: string;
   /** Debug session id, for stopDebug and restartDebug. */
   debugId?: string;
@@ -509,6 +518,23 @@ export class WorktreeWebviewProvider
    *  A PR only announces its merge if it was armed here first, which is what
    *  keeps a window opened onto an already-merged PR silent. */
   private readonly armedMerges = new Map<string, number>();
+  /** The window's Repos, and which Repo any folder belongs to. */
+  private readonly workspaceRepos = new WorkspaceRepos();
+  private repos: Repo[] = [];
+  /** The one Repo this window shows. Everything git and every card is about it. */
+  private activeRepo?: Repo;
+  /** The last payload posted for each Repo, so switching back paints at once. */
+  private readonly snapshots = new Map<string, WorktreeData>();
+  /** The Repo id of each session seen in the registry, by pid (undefined when
+   *  outside every Repo). Kept until the session is gone, so an Active Repo
+   *  session that ends is told apart from a Foreign Agent that wrote its file. */
+  private readonly sessionRepo = new Map<number, string | undefined>();
+  /** Active Repo sessions that ended since the last refreshAgents looked. */
+  private readonly endedActive = new Set<number>();
+  /** Agents Waiting, per Repo id, across the window's Repos. */
+  private waitingByRepo = new Map<string, number>();
+  /** When the user switched Active Repo, until the new Repo's gather paints. */
+  private switchStartedAt?: number;
 
   constructor(private readonly context: vscode.ExtensionContext) {
     initGithub(context);
@@ -552,6 +578,7 @@ export class WorktreeWebviewProvider
     );
     this.registryDir = registryDir();
     this.reader = new TranscriptReader(projectsDir());
+    this.syncRepos();
     // Ensure the directory exists so the watcher attaches even before Claude
     // has registered its first session.
     try {
@@ -838,6 +865,13 @@ export class WorktreeWebviewProvider
   async refresh(force = false): Promise<void> {
     if (!this.view) return;
     perf.count("refresh.requested");
+    // A hidden panel is gathered from scratch the moment it is shown again
+    // (onDidChangeVisibility), and the Activity Bar badge and waiting
+    // notifications come from the registry (readAgents), not from a gather.
+    if (!this.view.visible) {
+      perf.count("refresh.skippedHidden");
+      return;
+    }
     if (this.refreshing) {
       this.queuedRefresh = { force: force || !!this.queuedRefresh?.force };
       return;
@@ -886,8 +920,10 @@ export class WorktreeWebviewProvider
     this.pendingRegather = undefined;
     // Every agent on a card comes from Claude's own session registry; a session
     // that is gone has no file, so there is nothing to sweep or expire.
+    const repo = this.activeRepo;
     const registry = await this.readAgents();
-    const data = await gatherWorktrees(registry, this.reader);
+    const data = await gatherWorktrees(repo?.folderPath, registry, this.reader);
+    data.repoId = repo?.id;
     // A full gather just read every worktree's status, so the agent path has
     // nothing to re-read for a moment (see statusPoll.ts). Worktrees that are
     // gone drop out, so the map tracks the cards rather than every path this
@@ -957,6 +993,10 @@ export class WorktreeWebviewProvider
     if (this.branchesPanel?.visible) void this.postBranches(false);
     await this.postGather(data, seq);
     perf.time("gather.ms", Date.now() - startedAt);
+    if (this.switchStartedAt !== undefined && data.repoId === this.activeRepo?.id) {
+      perf.time("switch.paintMs", Date.now() - this.switchStartedAt);
+      this.switchStartedAt = undefined;
+    }
     // The panel is now painted from purely local state. A forced refresh (the
     // Refresh button) also owes the user two things that are not local - remote
     // tracking refs and GitHub PR/CI status - and both are started here, AFTER
@@ -1073,7 +1113,11 @@ export class WorktreeWebviewProvider
    */
   private postData(data: WorktreeData, seq: number): void {
     if (!this.view || seq !== this.updateSeq) return;
+    // A gather started before the Active Repo changed lands here too.
+    if (data.repoId !== this.activeRepo?.id) return;
     this.lastData = data;
+    if (data.repoId) this.snapshots.set(data.repoId, data);
+    data.repos = this.repoOptions();
     // Find each new agent's terminal now, while nobody is waiting on it, so the
     // click that reveals it does not have to. Not awaited: it is an
     // optimization for a click that has not happened yet and must never hold up
@@ -1082,27 +1126,6 @@ export class WorktreeWebviewProvider
     // Before the unchanged-payload early return below: the poll follows what is
     // on the cards, which is now this payload whether or not it is re-posted.
     this.syncAgentPoll();
-    // Waiting agents surface as a number badge on the Activity Bar icon, so a
-    // blocked agent is visible even while the panel is hidden behind another
-    // view. Set before the unchanged-payload early return: a freshly resolved
-    // view starts with no badge regardless of what was last posted.
-    // Clear with a zero-value badge, never `undefined`: once a number badge
-    // has been shown, VS Code ignores `badge = undefined` and the stale count
-    // stays on the icon forever (microsoft/vscode#162900; still reproduces
-    // for webview views). A `{value: 0}` badge applies and renders as none.
-    const waiting = countWaitingAgents(data.worktrees);
-    this.view.badge = {
-      value: waiting,
-      tooltip:
-        waiting === 1
-          ? "1 agent waiting for you"
-          : `${waiting} agents waiting for you`,
-    };
-    // Same signal, but pushed rather than displayed: the badge is only visible
-    // while the Activity Bar is, and neither it nor the panel reaches the user
-    // once VS Code is behind another window. Before the unchanged-payload
-    // return below for the same reason as the badge.
-    this.notifyWaiting(data);
     this.notifyMerged(data);
     // lastActivity is a per-hook-event heartbeat the panel never renders;
     // including it in the signature would defeat this guard on every tool call
@@ -1137,14 +1160,10 @@ export class WorktreeWebviewProvider
    * hangs off postData. That is the same constraint the Activity Bar badge has
    * always had, and it is the extension's only refresh path.
    */
-  private notifyWaiting(data: WorktreeData): void {
+  private notifyWaiting(waiting: WaitingAgent[]): void {
     const seed = !this.notifySeeded;
     this.notifySeeded = true;
-    const fresh = newlyWaiting(
-      waitingAgents(data.worktrees),
-      this.announcedWaiting,
-      seed
-    );
+    const fresh = newlyWaiting(waiting, this.announcedWaiting, seed);
     if (!fresh.length) return;
     const mode = notifyMode(
       vscode.workspace.getConfiguration().get(NOTIFY_WAITING_SETTING)
@@ -1213,9 +1232,12 @@ export class WorktreeWebviewProvider
     const pids = new Set(this.pendingPids);
     this.pendingPids.clear();
     const registry = await this.readAgents();
-    // A pid with no file left is a session that just ended, which changes what
-    // a card lists rather than what one of its rows says. Nothing to patch.
-    if ([...pids].some((pid) => !registry.some((s) => s.pid === pid))) {
+    // An Active Repo session that ended changes what a card lists rather than
+    // what one of its rows says. Nothing to patch. A Foreign Agent's file
+    // changing, or one ending, changes no card.
+    const ended = this.endedActive.size > 0;
+    this.endedActive.clear();
+    if (ended) {
       perf.count("fallback.agents.sessionEnded");
       return this.refresh();
     }
@@ -1261,7 +1283,9 @@ export class WorktreeWebviewProvider
     // as gathered-for before the gather had run, is what made the race with an
     // agent registering itself permanent instead of momentary.
     const retry = sessions.unplaced.filter(
-      (p) => (this.regathered.get(pathKey(p)) ?? 0) < REGATHER_TRIES
+      (p) =>
+        this.isNotYetPlaced(p, data) &&
+        (this.regathered.get(pathKey(p)) ?? 0) < REGATHER_TRIES
     );
     if (retry.length) {
       this.pendingRegather = new Set(retry.map(pathKey));
@@ -1380,8 +1404,14 @@ export class WorktreeWebviewProvider
    * workspace), and it can be one that *should* have a card and does not yet,
    * which only a re-list can fix.
    */
-  private onRepoStateChange(root: string): void {
+  private onRepoStateChange(root: string, fsPath: string): void {
     perf.count("trigger.repoState");
+    // The Git extension reports every repository it has open, and other Repos
+    // in the window are among them. Nothing they do changes a card.
+    if (this.workspaceRepos.repoIdOf(fsPath) !== this.activeRepo?.id) {
+      perf.count("ignored.repoState.otherRepo");
+      return;
+    }
     this.repoDirty.add(root);
     this.reposDebounce.trigger();
   }
@@ -1524,8 +1554,181 @@ export class WorktreeWebviewProvider
       systemProbes.isAlive,
       this.registryCache
     );
+    // Every live session, not only the Active Repo's: a transcript dropped here
+    // is scanned again in full the next time its Repo is active.
     this.reader.retain(new Set(registry.map((s) => s.sessionId)));
-    return registry;
+    const live = new Set<number>();
+    for (const s of registry) {
+      live.add(s.pid);
+      if (!this.sessionRepo.has(s.pid)) {
+        this.sessionRepo.set(s.pid, this.workspaceRepos.repoIdOf(s.cwd));
+      }
+    }
+    for (const [pid, repoId] of this.sessionRepo) {
+      if (live.has(pid)) continue;
+      if (repoId && repoId === this.activeRepo?.id) this.endedActive.add(pid);
+      this.sessionRepo.delete(pid);
+    }
+    this.signalWaiting(registry);
+    return registry.filter(
+      (s) => !!this.activeRepo && this.sessionRepo.get(s.pid) === this.activeRepo.id
+    );
+  }
+
+  /**
+   * The Activity Bar badge, waiting notifications and the dropdown's counts,
+   * for every Repo in the window. Read from the registry rather than the cards,
+   * so they stay current while the panel is hidden and for Repos it is not
+   * showing.
+   */
+  private signalWaiting(registry: RegistrySession[]): void {
+    const inWindow = new Map(this.repos.map((r) => [r.id, r]));
+    const waiting: WaitingAgent[] = [];
+    const byRepo = new Map<string, number>();
+    for (const s of registry) {
+      if (s.status !== "waiting") continue;
+      const repo = inWindow.get(this.sessionRepo.get(s.pid) ?? "");
+      if (!repo) continue;
+      byRepo.set(repo.id, (byRepo.get(repo.id) ?? 0) + 1);
+      waiting.push(this.describeWaiting(s, repo));
+    }
+    this.waitingByRepo = byRepo;
+    // Clear with a zero-value badge, never `undefined`: once a number badge
+    // has been shown, VS Code ignores `badge = undefined` and the stale count
+    // stays on the icon forever (microsoft/vscode#162900).
+    if (this.view) {
+      this.view.badge = {
+        value: waiting.length,
+        tooltip:
+          waiting.length === 1
+            ? "1 agent waiting for you"
+            : `${waiting.length} agents waiting for you`,
+      };
+    }
+    this.notifyWaiting(waiting);
+  }
+
+  /** A Waiting Agent as its notification names it: its row's label and card
+   *  when it is on one, otherwise its session name and Repo. */
+  private describeWaiting(s: RegistrySession, repo: Repo): WaitingAgent {
+    if (repo.id === this.activeRepo?.id) {
+      for (const wt of this.lastData?.worktrees ?? []) {
+        const row = wt.agents.find((a) => a.sessionId === s.sessionId);
+        if (row) return { sessionId: s.sessionId, label: row.label, where: wt.name };
+      }
+    }
+    return { sessionId: s.sessionId, label: s.name ?? "Claude", where: repo.label };
+  }
+
+  /** The Active Repo dropdown's entries, or undefined with only one Repo. */
+  private repoOptions(): RepoOptionVM[] | undefined {
+    if (this.repos.length < 2) return undefined;
+    return this.repos.map((r) => ({
+      id: r.id,
+      label: r.label,
+      active: r.id === this.activeRepo?.id,
+      waiting: this.waitingByRepo.get(r.id) ?? 0,
+    }));
+  }
+
+  /**
+   * An unplaced folder worth another gather: in the Active Repo, inside a
+   * Worktree that has no card yet (one `claude -w` has just made). A folder in
+   * another Repo is a Foreign Agent's, and a subfolder of a carded Worktree is
+   * already placed; neither is ever gathered for.
+   */
+  private isNotYetPlaced(folder: string, data: WorktreeData): boolean {
+    const loc = this.workspaceRepos.locate(folder, { fresh: true });
+    if (!loc || loc.commonDir !== this.activeRepo?.id) return false;
+    // Resolved on both sides: a folder reached through a symlink names the same
+    // Worktree as git's resolved listing of it.
+    const worktree = pathKey(canonical(loc.worktree));
+    return !data.worktrees.some((wt) => pathKey(canonical(wt.path)) === worktree);
+  }
+
+  /**
+   * Re-read the window's Repos (on activation and when its folders change) and
+   * keep the Active Repo, or fall back to the first. Returns whether the Active
+   * Repo changed.
+   */
+  private syncRepos(): boolean {
+    this.repos = this.workspaceRepos.catalog();
+    const next = chooseActiveRepo(
+      this.repos,
+      this.context.workspaceState.get<string>(ACTIVE_REPO_KEY)
+    );
+    if (next?.id === this.activeRepo?.id) return false;
+    this.enterRepo(next);
+    return true;
+  }
+
+  /** The window's folders changed: a Repo may have come or gone. */
+  async onWorkspaceFoldersChanged(): Promise<void> {
+    this.syncRepos();
+    this.lastPosted = "";
+    await this.refresh();
+  }
+
+  /**
+   * The Switch Repository command: pick from the window's Repos, each with its
+   * Waiting count. `id` skips the pick.
+   */
+  async switchRepo(id?: string): Promise<void> {
+    if (!id) {
+      const picked = await vscode.window.showQuickPick(
+        this.repos.map((r) => ({
+          label: r.label,
+          description: r.id === this.activeRepo?.id ? "active" : undefined,
+          detail: this.waitingByRepo.get(r.id)
+            ? `${this.waitingByRepo.get(r.id)} waiting`
+            : undefined,
+          id: r.id,
+        })),
+        { placeHolder: "Repository to show" }
+      );
+      id = picked?.id;
+    }
+    await this.selectRepo(id);
+  }
+
+  /** The user chose another Repo from the dropdown. */
+  private async selectRepo(id?: string): Promise<void> {
+    const repo = this.repos.find((r) => r.id === id);
+    if (!repo || repo.id === this.activeRepo?.id) return;
+    perf.count("switch");
+    this.switchStartedAt = Date.now();
+    await this.context.workspaceState.update(ACTIVE_REPO_KEY, repo.id);
+    this.enterRepo(repo);
+    // The last payload for this Repo, if there is one, paints now; the gather
+    // below replaces it.
+    if (this.lastData) {
+      this.postData(this.lastData, ++this.updateSeq);
+      perf.time("switch.snapshotPaintMs", Date.now() - this.switchStartedAt);
+    }
+    if (this.branchesPanel?.visible) void this.postBranches(false);
+    await this.refresh();
+  }
+
+  /**
+   * Make `repo` the Active Repo. Everything held about the previous one is
+   * per-Repo and is dropped; bumping the token stops anything still in flight
+   * for it from posting.
+   */
+  private enterRepo(repo: Repo | undefined): void {
+    this.activeRepo = repo;
+    ++this.updateSeq;
+    this.lastData = repo ? this.snapshots.get(repo.id) : undefined;
+    this.lastPosted = "";
+    this.statusAt.clear();
+    this.regathered.clear();
+    this.pendingRegather = undefined;
+    this.repoDirty.clear();
+    this.pendingPids.clear();
+    this.endedActive.clear();
+    this.lastSubagentCount = 0;
+    // Membership is judged against the Active Repo, so it is judged afresh.
+    this.sessionRepo.clear();
+    diag(`active repo: ${repo ? `${repo.label} (${repo.id})` : "none"}`);
   }
 
   /** The registry as agent rows, with each session's work summary read from its
@@ -1641,6 +1844,8 @@ export class WorktreeWebviewProvider
     switch (msg.action) {
       case "refresh":
         return void this.refresh(true);
+      case "selectRepo":
+        return this.selectRepo(msg.repoId);
       case "refreshWorktree":
         return this.refreshWorktree(msg.path);
       case "agent":
@@ -2670,9 +2875,10 @@ export class WorktreeWebviewProvider
       if (this.repoStateWatch.has(key)) return;
       const event = repo.state?.onDidChange;
       if (!event) return;
+      const root = repo.rootUri.fsPath;
       this.repoStateWatch.set(
         key,
-        event(() => this.onRepoStateChange(key))
+        event(() => this.onRepoStateChange(key, root))
       );
     };
     // Repositories already open, plus every one discovered later. On a fresh
@@ -2777,8 +2983,16 @@ export class WorktreeWebviewProvider
     // Drive the (testable) scope algorithm against the live Git model. It opens
     // the target, swaps out a lone previous scope, self-heals if that close
     // drops the worktree, and waits for the model to settle.
+    // Only the Active Repo's Worktrees are swapped in and out. Other Repos in
+    // the window keep their Source Control entries: closing one is remembered
+    // by the Git extension across reloads.
     const model: ScmModel = {
-      list: () => api.repositories.map((r) => normalize(r.rootUri.fsPath)),
+      list: () =>
+        api.repositories
+          .filter(
+            (r) => this.workspaceRepos.repoIdOf(r.rootUri.fsPath) === this.activeRepo?.id
+          )
+          .map((r) => normalize(r.rootUri.fsPath)),
       open: async (p) => {
         await api.openRepository(vscode.Uri.file(p)).catch(() => {});
       },
@@ -2865,9 +3079,9 @@ export class WorktreeWebviewProvider
     await this.refresh();
   }
 
-  /** The folder the panel operates on (the opened repo/worktree). */
+  /** The folder the panel operates on: the Active Repo's workspace folder. */
   private repoCwd(): string | undefined {
-    return vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+    return this.activeRepo?.folderPath;
   }
 
   /** Path of the repository's primary (main) worktree, listed from any folder. */
@@ -2914,7 +3128,7 @@ export class WorktreeWebviewProvider
    * (no window reload) once its state file reveals the new path.
    */
   private async agentWorktree(): Promise<void> {
-    const cwd = this.repoCwd() ?? vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+    const cwd = this.repoCwd();
     if (!cwd) {
       vscode.window.showErrorMessage("No git repository in this window.");
       return;
@@ -4143,7 +4357,7 @@ export class WorktreeWebviewProvider
     // Claim this post's place in line. Anything that started earlier and resolves
     // after a newer post must not overwrite it (see branchPostSeq).
     const seq = ++this.branchPostSeq;
-    const data = await gatherBranches();
+    const data = await gatherBranches(this.repoCwd());
     // A caller can supply a pre-resolved connection (the immediate on-open paint
     // passes a synthesized one) to avoid the network probe gating the post.
     const github = flags.github ?? (await connection());

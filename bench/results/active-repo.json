@@ -1,0 +1,142 @@
+{
+  "recordedAt": "2026-10-23T20:33:07.526Z",
+  "vscode": "1.143.1",
+  "platform": "darwin-arm64",
+  "windowFocused": true,
+  "phaseMs": 60000,
+  "phases": {
+    "idle": {
+      "counts": {
+        "gather.full": 1,
+        "git.status": 6,
+        "git.worktree": 1,
+        "refresh.agents": 60,
+        "refresh.requested": 1,
+        "trigger.agentPoll": 60,
+        "trigger.focus": 1
+      },
+      "timings": {
+        "gather.ms": {
+          "count": 1,
+          "p50": 211,
+          "p95": 211,
+          "max": 211
+        }
+      },
+      "ms": 60004,
+      "focusedShare": 1,
+      "heapMb": 34
+    },
+    "otherReposBusy": {
+      "counts": {
+        "gather.full": 2,
+        "git.status": 9,
+        "git.worktree": 2,
+        "ignored.repoState.otherRepo": 35,
+        "refresh.agents": 57,
+        "refresh.requested": 2,
+        "trigger.agentPoll": 54,
+        "trigger.focus": 2,
+        "trigger.registry": 20,
+        "trigger.repoState": 35
+      },
+      "timings": {
+        "gather.ms": {
+          "count": 2,
+          "p50": 224,
+          "p95": 294,
+          "max": 294
+        }
+      },
+      "ms": 60081,
+      "focusedShare": 0.93,
+      "heapMb": 36
+    },
+    "firstRepoBusy": {
+      "counts": {
+        "git.diff": 23,
+        "git.status": 24,
+        "ignored.repoState.otherRepo": 1,
+        "refresh.agents": 60,
+        "refresh.repos": 18,
+        "trigger.agentPoll": 60,
+        "trigger.registry": 10,
+        "trigger.repoState": 25
+      },
+      "timings": {},
+      "ms": 60068,
+      "focusedShare": 1,
+      "heapMb": 37.3
+    },
+    "agentLifecycle": {
+      "counts": {
+        "fallback.agents.unplaced": 1,
+        "gather.full": 1,
+        "git.diff": 5,
+        "git.status": 9,
+        "git.worktree": 1,
+        "ps.commandLine": 1,
+        "ps.tree": 1,
+        "refresh.agents": 60,
+        "refresh.repos": 3,
+        "refresh.requested": 1,
+        "trigger.agentPoll": 60,
+        "trigger.registry": 5,
+        "trigger.repoState": 4
+      },
+      "timings": {
+        "gather.ms": {
+          "count": 1,
+          "p50": 298,
+          "p95": 298,
+          "max": 298
+        }
+      },
+      "ms": 60220,
+      "focusedShare": 1,
+      "heapMb": 38.7
+    },
+    "switchRepo": {
+      "counts": {
+        "fallback.agents.noPayload": 1,
+        "gather.full": 7,
+        "git.diff": 11,
+        "git.remote": 2,
+        "git.rev-parse": 2,
+        "git.status": 33,
+        "git.worktree": 7,
+        "ps.commandLine": 13,
+        "ps.tree": 6,
+        "refresh.agents": 62,
+        "refresh.requested": 8,
+        "switch": 6,
+        "transcript.scan": 2,
+        "transcript.tail": 2,
+        "trigger.agentPoll": 62
+      },
+      "timings": {
+        "gather.ms": {
+          "count": 7,
+          "p50": 290,
+          "p95": 305,
+          "max": 305
+        },
+        "switch.paintMs": {
+          "count": 6,
+          "p50": 295,
+          "p95": 310,
+          "max": 310
+        },
+        "switch.snapshotPaintMs": {
+          "count": 4,
+          "p50": 5,
+          "p95": 7,
+          "max": 7
+        }
+      },
+      "ms": 61706,
+      "focusedShare": 1,
+      "heapMb": 39.9
+    }
+  }
+}
