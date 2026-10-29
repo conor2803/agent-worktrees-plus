@@ -3,7 +3,7 @@
 All notable changes to Agent Worktrees Plus are documented here. Entries from
 4.6.12 down are from the original Agent Worktrees, which this fork is based on.
 
-## 0.1.0 (unreleased)
+## 0.1.0
 
 ### New
 
@@ -22,7 +22,6 @@ All notable changes to Agent Worktrees Plus are documented here. Entries from
   waiting notifications do not depend on it.
 - **Scoping Source Control** closes only the active repository's other worktrees,
   never another repository's.
-
 - **Forked from Agent Worktrees 4.6.12 as Agent Worktrees Plus.** Commands and
   settings moved from `agentWorktrees.*` to `agentWorktreesPlus.*`; settings
   from the original are not carried over. Releases ship as a `.vsix` on GitHub,
