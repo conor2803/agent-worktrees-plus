@@ -4,7 +4,7 @@ const assert = require("node:assert");
 const path = require("node:path");
 const { catalogRepos, chooseActiveRepo, locateWorktree } = require("../out/repos.js");
 
-const p = (...parts) => path.join(path.sep, ...parts);
+const p = (...parts) => path.resolve(path.sep, ...parts);
 
 // --- catalogRepos -------------------------------------------------------------
 
